@@ -30,4 +30,7 @@ dependencies {
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:2.2.2'
     implementation files('libs/core-1.58.0.0.jar')
     implementation files('libs/prov-1.58.0.0.jar')
+    implementation 'com.android.support:design:26.0.0-beta1'
+    implementation 'com.android.support:support-v4:26.0.0-beta1'
+    implementation 'com.android.support:design:26.0.0-beta1'
 }

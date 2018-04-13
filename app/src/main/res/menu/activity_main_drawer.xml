@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:showIn="navigation_view">
+
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_des"
+            android:icon="@drawable/ic_menu_camera"
+            android:title="@string/des" />
+        <item
+            android:id="@+id/nav_tdes"
+            android:icon="@drawable/ic_menu_camera"
+            android:title="@string/tdes" />
+        <item
+            android:id="@+id/nav_aes"
+            android:icon="@drawable/ic_menu_camera"
+            android:title="@string/aes" />
+        <item
+            android:id="@+id/nav_ras"
+            android:icon="@drawable/ic_menu_camera"
+            android:title="@string/rsa" />
+        <item
+            android:id="@+id/nav_chacha"
+            android:icon="@drawable/ic_menu_camera"
+            android:title="@string/chacha" />
+    </group>
+
+    <item android:title="Communicate">
+        <menu>
+            <item
+                android:id="@+id/nav_share"
+                android:icon="@drawable/ic_menu_camera"
+                android:title="@string/share" />
+            <item
+                android:id="@+id/nav_about"
+                android:icon="@drawable/ic_menu_camera"
+                android:title="@string/about" />
+        </menu>
+    </item>
+
+</menu>

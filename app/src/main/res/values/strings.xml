@@ -1,3 +1,16 @@
 <resources>
     <string name="app_name">finalproject</string>
+    <string name="author">辛之夼</string>
+    <string name="email">eric503630@outllok.com</string>
+    <string name="des">DES</string>
+    <string name="aes">AES</string>
+    <string name="tdes">3DES</string>
+    <string name="rsa">RSA</string>
+    <string name="chacha">ChaCha20</string>
+    <string name="share">Share</string>
+    <string name="about">About</string>
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>
