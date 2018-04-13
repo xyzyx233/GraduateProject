@@ -39,6 +39,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         initview();
+        setSupportActionBar(toolbar);
         fragmentTransaction=fragmentManager.beginTransaction();
         fragment=new DES_fragment();
         fragmentTransaction.add(R.id.fg_container,fragment);
@@ -68,6 +69,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         int id = item.getItemId();
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
+            this.finish();
             return true;
         }
         return super.onOptionsItemSelected(item);
