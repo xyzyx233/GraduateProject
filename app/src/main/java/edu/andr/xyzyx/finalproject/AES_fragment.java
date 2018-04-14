@@ -1,12 +1,14 @@
 package edu.andr.xyzyx.finalproject;
 
 import android.content.Context;
+import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 
 /**
@@ -26,6 +28,7 @@ public class AES_fragment extends Fragment {
     // TODO: Rename and change types of parameters
     private String mParam1;
     private String mParam2;
+    private TextView textView;
 
 //    private OnFragmentInteractionListener mListener;
 
@@ -64,7 +67,17 @@ public class AES_fragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_aes_fragment, container, false);
+        View view= inflater.inflate(R.layout.fragment_aes_fragment, container, false);
+        textView=(TextView)view.findViewById(R.id.about_aes);
+        textView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Uri uri=Uri.parse("https://zh.wikipedia.org/wiki/%E9%AB%98%E7%BA%A7%E5%8A%A0%E5%AF%86%E6%A0%87%E5%87%86");
+                Intent intent=new Intent(Intent.ACTION_VIEW,uri);
+                startActivity(intent);
+            }
+        });
+        return view;
     }
 
 //    // TODO: Rename method, update argument and hook method into UI event

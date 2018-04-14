@@ -1,12 +1,16 @@
 package edu.andr.xyzyx.finalproject;
 
 import android.content.Context;
+import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.TextView;
 
 
 /**
@@ -26,6 +30,9 @@ public class DES_fragment extends Fragment {
     // TODO: Rename and change types of parameters
     private String mParam1;
     private String mParam2;
+    private TextView textView;
+    private Button button;
+    private EditText editText;
 
 //    private OnFragmentInteractionListener mListener;
 
@@ -65,9 +72,40 @@ public class DES_fragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view= inflater.inflate(R.layout.fragment_des_fragment, container, false);
+        initview(view);
+        textView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Uri uri=Uri.parse("https://zh.wikipedia.org/wiki/%E8%B3%87%E6%96%99%E5%8A%A0%E5%AF%86%E6%A8%99%E6%BA%96");
+                Intent intent=new Intent(Intent.ACTION_VIEW,uri);
+                startActivity(intent);
+            }
+        });
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                check();
+            }
+        });
         return view;
     }
 
+    private void check() {
+    }
+
+    private void initview(View view){
+        textView=(TextView)view.findViewById(R.id.about_des);
+        button=(Button)view.findViewById(R.id.btn_des);
+        editText=(EditText)view.findViewById(R.id.des_key);
+//        Snackbar.make(mOpenTv, "消息内容", Snackbar.LENGTH_SHORT)
+//                .setAction("确定", new View.OnClickListener() {
+//                    @Override
+//                    public void onClick(View v) {
+//
+//                    }
+//                })
+//                .show();
+    }
     // TODO: Rename method, update argument and hook method into UI event
 //    public void onButtonPressed(Uri uri) {
 //        if (mListener != null) {

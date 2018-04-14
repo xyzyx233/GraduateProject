@@ -13,4 +13,260 @@
     <string name="navigation_drawer_close">Close navigation drawer</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="this_is_des"><u>What is DES?</u></string>
+    <string name="this_is_aes"><u>What is AES?</u></string>
+    <string name="this_is_tdes"><u>What is 3DES?</u></string>
+    <string name="this_is_rsa"><u>What is RSA?</u></string>
+    <string name="this_is_chacha"><u>What is CHaCha20?</u></string>
+    <string name="key">密钥：</string>
+    <string name="check">开始测试</string>
+    <string name="testinfo">测试信息：</string>
+    <string name="des_page">DES页</string>
+    <string name="aes_page">AES页</string>
+    <string name="tdes_page">3DES页</string>
+    <string name="rsa_page">RSA页</string>
+    <string name="chacha_page">ChaCha20页</string>
+    <string name="trysome">package org.bouncycastle.crypto.examples;
+
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.security.SecureRandom;
+
+import org.bouncycastle.crypto.CryptoException;
+import org.bouncycastle.crypto.KeyGenerationParameters;
+import org.bouncycastle.crypto.engines.DESedeEngine;
+import org.bouncycastle.crypto.generators.DESedeKeyGenerator;
+import org.bouncycastle.crypto.modes.CBCBlockCipher;
+import org.bouncycastle.crypto.paddings.PaddedBufferedBlockCipher;
+import org.bouncycastle.crypto.params.DESedeParameters;
+import org.bouncycastle.crypto.params.KeyParameter;
+import org.bouncycastle.util.encoders.Hex;
+
+/**
+ * DESExample is a simple DES based encryptor/decryptor.
+ * The program is command line driven, with the input
+ * and output files specified on the command line.
+ * java org.bouncycastle.crypto.examples.DESExample infile outfile [keyfile]
+ * A new key is generated for each encryption, if key is not specified,
+ * then the example will assume encryption is required, and as output
+ * create deskey.dat in the current directory.  This key is a hex
+ * encoded byte-stream that is used for the decryption.  The output
+ * file is Hex encoded, 60 characters wide text file.
+ * When encrypting;
+ *  the infile is expected to be a byte stream (text or binary)
+ *  there is no keyfile specified on the input line
+ *
+ * When decrypting;
+ *
+ *  the infile is expected to be the 60 character wide base64
+ *    encoded file
+ *  the keyfile is expected to be a base64 encoded file
+ *
+ *
+ * This example shows how to use the light-weight API, DES and
+ * the filesystem for message encryption and decryption.
+ *
+ */
+public class DESExample extends Object
+{
+    // Encrypting or decrypting ?
+    private boolean encrypt = true;
+
+    // To hold the initialised DESede cipher
+    private PaddedBufferedBlockCipher cipher = null;
+
+    // The input stream of bytes to be processed for encryption
+    private BufferedInputStream in = null;
+
+    // The output stream of bytes to be procssed
+    private BufferedOutputStream out = null;
+
+    // The key
+    private byte[] key = null;
+
+    /*
+     * start the application
+     */
+    public static void main(String[] args)
+    {
+        boolean encrypt = true;
+        String infile = null;
+        String outfile = null;
+        String keyfile = null;
+
+        if (args.length  2)
+        {
+            DESExample de = new DESExample();
+            System.err.println("Usage: java "+de.getClass().getName()+
+                                " infile outfile [keyfile]");
+            System.exit(1);
+        }
+
+        keyfile = "deskey.dat";
+        infile = args[0];
+        outfile = args[1];
+
+        if (args.length  2)
+        {
+            encrypt = false;
+            keyfile = args[2];
+        }
+
+        DESExample de = new DESExample(infile, outfile, keyfile, encrypt);
+        de.process();
+    }
+
+    // Default constructor, used for the usage message
+    public DESExample()
+    {
+    }
+
+    /*
+     * Constructor, that takes the arguments appropriate for
+     * processing the command line directives.
+     */
+    public DESExample(
+                String infile,
+                String outfile,
+                String keyfile,
+                boolean encrypt)
+    {
+        *
+         * First, determine that infile  keyfile exist as appropriate.
+         *
+         * This will also create the BufferedInputStream as required
+         * for reading the input file.  All input files are treated
+         * as if they are binary, even if they contain text, it* to determine the size of the input chunk.  It just
+         * was a convenient number for the example.
+         */
+        // int inBlockSize = cipher.getBlockSize() * 5;
+        int inBlockSize = 47;
+        int outBlockSize = cipher.getOutputSize(inBlockSize);
+
+        byte[] inblock = new byte[inBlockSize];
+        byte[] outblock = new byte[outBlockSize];
+
+        /*
+         * now, read the file, and output the chunks
+         */
+        try
+        {
+            int inL;
+            int outL;
+            byte[] rv = null;
+            while ((inL=in.read(inblock, 0, inBlockSize)) > 0)
+            {
+                outL = cipher.processBytes(inblock, 0, inL, outblock, 0);
+                /*
+                 * Before we write anything out, we need to make sure
+                 * that we've got something to write out.
+                 */
+                if (outL > 0)
+                {
+                    rv = Hex.encode(outblock, 0, outL);
+                    out.write(rv, 0, rv.length);
+                    out.write('\n');
+                }
+            }
+
+            try
+            {
+                /*
+                 * Now, process the bytes that are still buffered
+                 * within the cipher.
+                 */
+                outL = cipher.doFinal(outblock, 0);
+                if (outL > 0)
+                {
+                    rv = Hex.encode(outblock, 0, outL);
+                    out.write(rv, 0, rv.length);
+                    out.write('\n');
+                }
+            }
+            catch (CryptoException ce)
+            {
+
+            }
+        }
+        catch (IOException ioeread)
+        {
+            ioeread.printStackTrace();
+        }
+    }
+
+    /*
+     * This method performs all the decryption and writes
+     * the plain text to the buffered output stream created
+     * previously.
+     */
+    private void performDecrypt(byte[] key)
+    {
+        // initialise the cipher for decryption
+        cipher.init(false, new KeyParameter(key));
+
+        /*
+         * As the decryption is from our preformatted file,
+         * and we know that it's a hex encoded format, then
+         * we wrap the InputStream with a BufferedReader
+         * so that we can read it easily.
+         */
+        BufferedReader br = new BufferedReader(new InputStreamReader(in));
+
+        /*
+         * now, read the file, and output the chunks
+         */
+        try
+        {
+            int outL;
+            byte[] inblock = null;
+            byte[] outblock = null;
+            String rv = null;
+            while ((rv = br.readLine()) != null)
+            {
+                inblock = Hex.decode(rv);
+                outblock = new byte[cipher.getOutputSize(inblock.length)];
+
+                outL = cipher.processBytes(inblock, 0, inblock.length,
+                                            outblock, 0);
+                /*
+                 * Before we write anything out, we need to make sure
+                 * that we've got something to write out.
+                 */
+                if (outL > 0)
+                {
+                    out.write(outblock, 0, outL);
+                }
+            }
+
+            try
+            {
+                /*
+                 * Now, process the bytes that are still buffered
+                 * within the cipher.
+                 */
+                outL = cipher.doFinal(outblock, 0);
+                if (outL > 0)
+                {
+                    out.write(outblock, 0, outL);
+                }
+            }
+            catch (CryptoException ce)
+            {
+
+            }
+        }
+        catch (IOException ioeread)
+        {
+            ioeread.printStackTrace();
+        }
+    }
+
+}
+</string>
 </resources>
