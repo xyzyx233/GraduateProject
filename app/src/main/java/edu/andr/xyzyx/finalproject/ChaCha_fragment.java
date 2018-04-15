@@ -5,10 +5,29 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.app.Fragment;
+import android.os.Handler;
+import android.os.Message;
+import android.support.design.widget.Snackbar;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
+
+import edu.andr.xyzyx.MyUtil.ChaCha;
+import edu.andr.xyzyx.MyUtil.ConstantArgument;
+import edu.andr.xyzyx.MyUtil.FilerHelper;
 
 
 /**
@@ -19,7 +38,7 @@ import android.widget.TextView;
  * Use the {@link ChaCha_fragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class ChaCha_fragment extends Fragment {
+public class ChaCha_fragment extends Fragment implements ConstantArgument{
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
@@ -28,8 +47,41 @@ public class ChaCha_fragment extends Fragment {
     // TODO: Rename and change types of parameters
     private String mParam1;
     private String mParam2;
+    private byte[] key,iv;
     private View view;
     private TextView textView;
+    private Button button;
+    private EditText chachakey,chachaiv;
+
+    private Snackbar.Callback callback=new Snackbar.Callback() {
+        @Override
+        public void onDismissed(Snackbar snackbar, int event) {
+            chachakey.setEnabled(true);
+            chachaiv.setEnabled(true);
+        }
+
+        @Override
+        public void onShown(Snackbar snackbar) {
+            chachakey.setEnabled(false);
+            chachaiv.setEnabled(false);
+        }
+    };
+
+    private Handler mHandler = new Handler(){
+
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+            switch (msg.what) {
+                case 0:
+                    //do something,refresh UI;
+                    break;
+                default:
+                    break;
+            }
+        }
+
+    };
 
 //    private OnFragmentInteractionListener mListener;
 
@@ -70,12 +122,98 @@ public class ChaCha_fragment extends Fragment {
         // Inflate the layout for this fragment
         view= inflater.inflate(R.layout.fragment_cha_cha_fragment, container, false);
         initview();
+        chachakey.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                if(!hasFocus){
+                    String tkey=chachakey.getText().toString();
+                    if(tkey.getBytes().length!=32)
+                        Snackbar.make(v,"密钥格式错误",Snackbar.LENGTH_INDEFINITE)
+                        .setAction("确认", new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                chachakey.setFocusable(true);
+                            }
+                        })
+                        .addCallback(callback).show();
+                    key=tkey.getBytes();
+                }
+            }
+        });
+        chachaiv.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                if(!hasFocus){
+                    String tiv=chachaiv.getText().toString();
+                    if(tiv.getBytes().length!=8) {
+                        Snackbar.make(v, "IV格式错误", Snackbar.LENGTH_INDEFINITE)
+                                .setAction("确认", new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View v) {
+                                        chachakey.setFocusable(true);
+                                    }
+                                })
+                                .addCallback(callback).show();
+                    }
+                    iv=tiv.getBytes();
+                }
+            }
+        });
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                switch (check()){
+                    case 1:
+                        Snackbar.make(v,"s密钥格式错误",Snackbar.LENGTH_INDEFINITE)
+                                .setAction("确认", new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View v) {
+                                        chachakey.setFocusable(true);
+                                    }
+                                })
+                                .addCallback(callback).show();
+                        return;
+                    case 2:
+                        Snackbar.make(v,"sIV格式错误",Snackbar.LENGTH_INDEFINITE)
+                                .setAction("确认", new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View v) {
+                                        chachakey.setFocusable(true);
+                                    }
+                                })
+                                .addCallback(callback).show();
+                        return;
+                    case 0:
+                        key=chachakey.getText().toString().getBytes();
+                        iv=chachaiv.getText().toString().getBytes();
+                        break;
+                    default:
 
+                        break;
+
+                }
+                ChachaThread chachaThread=new ChachaThread();
+                chachaThread.run();
+            }
+        });
         return view;
+    }
+
+    private int check() {
+        String tkey=chachakey.getText().toString();
+        if(tkey.getBytes().length!=32)
+            return 1;
+        String tiv=chachaiv.getText().toString();
+        if(tiv.getBytes().length!=8)
+            return 2;
+        return 0;
     }
 
     private void initview() {
         textView=(TextView)view.findViewById(R.id.about_chacha);
+        button=(Button)view.findViewById(R.id.btn_chacha);
+        chachakey=(EditText)view.findViewById(R.id.chacha_key);
+        chachaiv=(EditText)view.findViewById(R.id.chacha_iv);
         textView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -84,6 +222,41 @@ public class ChaCha_fragment extends Fragment {
                 startActivity(intent);
             }
         });
+        Snackbar.make(getActivity().findViewById(android.R.id.content), "密钥长度为4个字节,初始IV为2字节", Snackbar.LENGTH_INDEFINITE)
+                .addCallback(callback)
+                .setAction("确定", new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        chachakey.setEnabled(true);
+                        chachaiv.setEnabled(true);
+                    }
+                })
+                .show();
+
+    }
+    class ChachaThread extends Thread{
+        @Override
+        public void run() {
+            super.run();
+            String in,out;
+            ByteArrayOutputStream m=null;
+            InputStream fis=null,isDec=null;
+            OutputStream fos=null;
+            ByteArrayOutputStream osEnc= new ByteArrayOutputStream();
+            ChaCha chaCha=new ChaCha();
+            FilerHelper filerHelper=new FilerHelper(getContext());
+//            in= filerHelper.readSDCardFile(TESTFILE_1);
+            fis=new ByteArrayInputStream("in".getBytes());
+            ByteArrayOutputStream osDec=new ByteArrayOutputStream();
+            try {chaCha.encChaCha(fis,osEnc,key,iv);
+                isDec = new ByteArrayInputStream(osEnc.toByteArray());
+                chaCha.decChaCha(isDec,osDec,key,iv);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            Log.i("test",new String(osDec.toByteArray()));
+//            filerHelper.writeSDCardFile(CHAOUT_1,osDec.toByteArray());
+        }
     }
 
 //    // TODO: Rename method, update argument and hook method into UI event

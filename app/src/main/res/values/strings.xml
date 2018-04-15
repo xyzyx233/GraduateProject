@@ -29,6 +29,7 @@
     <string name="tdes_page">3DES页</string>
     <string name="rsa_page">RSA页</string>
     <string name="chacha_page">ChaCha20页</string>
+    <string name="iv">初始IV：</string>
     <string name="trysome">package org.bouncycastle.crypto.examples;
 
 import java.io.BufferedInputStream;
