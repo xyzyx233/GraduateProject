@@ -59,16 +59,18 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/key" />
+                    android:text="@string/key"
+                    />
 
                 <EditText
-                    android:id="@+id/des_key"
+                    android:id="@+id/aes_key"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content" />
+                    android:layout_height="wrap_content"
+                    android:text="12345678abc"/>
             </LinearLayout>
 
             <Button
-                android:id="@+id/button"
+                android:id="@+id/btn_aes"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"

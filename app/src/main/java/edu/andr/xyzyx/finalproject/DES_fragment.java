@@ -1,6 +1,5 @@
 package edu.andr.xyzyx.finalproject;
 
-import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -15,11 +14,14 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import org.spongycastle.crypto.CryptoException;
 
+import java.io.IOException;
+
+import edu.andr.xyzyx.MyUtil.ConstantArgument;
 import edu.andr.xyzyx.MyUtil.DES;
+import edu.andr.xyzyx.MyUtil.FilerHelper;
 import edu.andr.xyzyx.MyUtil.RandomString;
 
 
@@ -31,7 +33,7 @@ import edu.andr.xyzyx.MyUtil.RandomString;
  * Use the {@link DES_fragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class DES_fragment extends Fragment {
+public class DES_fragment extends Fragment implements ConstantArgument{
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
@@ -171,26 +173,24 @@ public class DES_fragment extends Fragment {
         textView=(TextView)view.findViewById(R.id.about_des);
         button=(Button)view.findViewById(R.id.btn_des);
         editText=(EditText)view.findViewById(R.id.des_key);
-//        Snackbar.make(mOpenTv, "消息内容", Snackbar.LENGTH_SHORT)
-//                .setAction("确定", new View.OnClickListener() {
-//                    @Override
-//                    public void onClick(View v) {
-//
-//                    }
-//                })
-//                .show();
     }
 class DESThread extends Thread{
     @Override
     public void run() {
         super.run();
         DES des=new DES(deskey);
-        String test="no word";
+        String result="";
+        FilerHelper filehelper=new FilerHelper(getContext());
         try {
+            String test=filehelper.readAssetsFile(TESTFILE_1);
             byte[] b=des.encryptString(test);
-            String s=des.decryptString(b);
+            result=des.decryptString(b);
+            Log.i("test",result);
+            filehelper.writeDateFile(DESOUT_1,result.getBytes());
         } catch (CryptoException e) {
             e.printStackTrace();
+        } catch (IOException e) {
+            Log.i("text","no test data file import");
         }
     }
 }

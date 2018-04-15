@@ -5,10 +5,17 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
+
+import edu.andr.xyzyx.MyUtil.AES;
+import edu.andr.xyzyx.MyUtil.ConstantArgument;
+import edu.andr.xyzyx.MyUtil.FilerHelper;
 
 
 /**
@@ -19,7 +26,7 @@ import android.widget.TextView;
  * Use the {@link AES_fragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class AES_fragment extends Fragment {
+public class AES_fragment extends Fragment implements ConstantArgument{
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
@@ -29,6 +36,9 @@ public class AES_fragment extends Fragment {
     private String mParam1;
     private String mParam2;
     private TextView textView;
+    private EditText editText;
+    private Button button;
+    private View view;
 
 //    private OnFragmentInteractionListener mListener;
 
@@ -67,8 +77,8 @@ public class AES_fragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View view= inflater.inflate(R.layout.fragment_aes_fragment, container, false);
-        textView=(TextView)view.findViewById(R.id.about_aes);
+        view= inflater.inflate(R.layout.fragment_aes_fragment, container, false);
+        initview();
         textView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -77,9 +87,31 @@ public class AES_fragment extends Fragment {
                 startActivity(intent);
             }
         });
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                AES aes=new AES();
+                FilerHelper filerHelper=new FilerHelper(getContext());
+                try {
+//                    String test=filerHelper.readAssetsFile(TESTFILE_1);
+                    byte[] rawkey=aes.getRawKey(editText.getText().toString().getBytes());
+                    byte[] en=aes.encrypt(rawkey,"test again".getBytes());
+                    String result=new String(aes.decrypt(rawkey,en));
+                    Log.i("test",result);
+//                    filerHelper.writeDateFile(AESOUT_1,result.getBytes());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
         return view;
     }
-
+    private void initview(){
+        button=(Button) view.findViewById(R.id.btn_aes);
+        editText=(EditText)view.findViewById(R.id.aes_key);
+        textView=(TextView)view.findViewById(R.id.about_aes);
+    }
 //    // TODO: Rename method, update argument and hook method into UI event
 //    public void onButtonPressed(Uri uri) {
 //        if (mListener != null) {

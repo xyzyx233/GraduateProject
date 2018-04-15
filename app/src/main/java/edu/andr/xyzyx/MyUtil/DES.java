@@ -1,6 +1,8 @@
 package edu.andr.xyzyx.MyUtil;
 
 
+import android.util.Log;
+
 import org.spongycastle.crypto.BufferedBlockCipher;
 import org.spongycastle.crypto.CryptoException;
 import org.spongycastle.crypto.engines.BlowfishEngine;
@@ -8,13 +10,22 @@ import org.spongycastle.crypto.modes.CBCBlockCipher;
 import org.spongycastle.crypto.modes.PaddedBlockCipher;
 import org.spongycastle.crypto.params.KeyParameter;
 
+import java.security.SecureRandom;
+
+import javax.crypto.Cipher;
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+
 /**
  * Created by asus on 2018/3/3.
  */
 
 public class DES {
-    public BufferedBlockCipher cipher;
-    public KeyParameter key;
+    private BufferedBlockCipher cipher;
+    private KeyParameter key;
+    private byte[] rr={1,2,3,4,5,6,7,8};
     public DES(){
     }
     public DES( byte[] key ){
@@ -102,5 +113,34 @@ public class DES {
         }
 
         return new String( decrypt( data ) );
+    }
+    public  byte[] getRawKey(byte[] seed) throws Exception {
+        KeyGenerator kgen = KeyGenerator.getInstance("DES");
+        SecureRandom sr = SecureRandom.getInstance("SHA1PRNG","Crypto");
+        sr.setSeed(seed);
+        kgen.init(56, sr);
+        SecretKey skey = kgen.generateKey();
+        byte[] raw = skey.getEncoded();
+        return raw;
+    }
+
+    public  byte[] encrypt(byte[] raw, byte[] clear) throws Exception {
+        SecretKeySpec skeySpec = new SecretKeySpec(raw, "DES");
+        Cipher cipher = Cipher.getInstance("DES/CBC/PKCS5Padding");
+        cipher.init(Cipher.ENCRYPT_MODE, skeySpec, new IvParameterSpec(
+                new byte[cipher.getBlockSize()]));
+        byte[] encrypted = cipher.doFinal(clear);
+        return encrypted;
+    }
+
+    public   byte[] decrypt(byte[] raw, byte[] encrypted)
+            throws Exception {
+        SecretKeySpec skeySpec = new SecretKeySpec(raw, "DES");
+        Log.i("test",skeySpec.toString());
+        Cipher cipher = Cipher.getInstance("DES/CBC/PKCS5Padding");
+        cipher.init(Cipher.DECRYPT_MODE, skeySpec, new IvParameterSpec(
+                new byte[cipher.getBlockSize()]));
+        byte[] decrypted = cipher.doFinal(encrypted);
+        return decrypted;
     }
 }

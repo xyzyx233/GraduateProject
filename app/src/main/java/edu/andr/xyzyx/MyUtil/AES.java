@@ -13,7 +13,7 @@ import javax.crypto.spec.SecretKeySpec;
  */
 
 public class AES {
-    private static byte[] getRawKey(byte[] seed) throws Exception {
+    public byte[] getRawKey(byte[] seed) throws Exception {
         KeyGenerator kgen = KeyGenerator.getInstance("AES");
         SecureRandom sr = SecureRandom.getInstance("SHA1PRNG", "Crypto");
         sr.setSeed(seed);
@@ -23,7 +23,7 @@ public class AES {
         return raw;
     }
 
-    private static byte[] encrypt(byte[] raw, byte[] clear) throws Exception {
+    public byte[] encrypt(byte[] raw, byte[] clear) throws Exception {
         SecretKeySpec skeySpec = new SecretKeySpec(raw, "AES");
         Cipher cipher = Cipher.getInstance("AES");
         cipher.init(Cipher.ENCRYPT_MODE, skeySpec, new IvParameterSpec(
@@ -32,7 +32,7 @@ public class AES {
         return encrypted;
     }
 
-    private static byte[] decrypt(byte[] raw, byte[] encrypted)
+    public byte[] decrypt(byte[] raw, byte[] encrypted)
             throws Exception {
         SecretKeySpec skeySpec = new SecretKeySpec(raw, "AES");
         Cipher cipher = Cipher.getInstance("AES");
