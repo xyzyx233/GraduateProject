@@ -269,4 +269,5 @@ public class DESExample extends Object
 
 }
 </string>
+    <string name="desdefaultkey">12345678</string>
 </resources>

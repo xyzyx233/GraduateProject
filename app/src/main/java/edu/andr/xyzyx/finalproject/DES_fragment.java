@@ -5,7 +5,10 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.app.Fragment;
+import android.os.Handler;
+import android.os.Message;
 import android.support.design.widget.Snackbar;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,6 +16,11 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import org.spongycastle.crypto.CryptoException;
+
+import edu.andr.xyzyx.MyUtil.DES;
+import edu.andr.xyzyx.MyUtil.RandomString;
 
 
 /**
@@ -37,6 +45,35 @@ public class DES_fragment extends Fragment {
     private Button button;
     private EditText editText;
 
+    private String deskey;
+
+    private Snackbar.Callback callback=new Snackbar.Callback() {
+        @Override
+        public void onDismissed(Snackbar snackbar, int event) {
+            editText.setEnabled(true);
+        }
+
+        @Override
+        public void onShown(Snackbar snackbar) {
+            editText.setEnabled(false);
+        }
+    };
+
+    private Handler mHandler = new Handler(){
+
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+            switch (msg.what) {
+                case 0:
+                    //do something,refresh UI;
+                    break;
+                default:
+                    break;
+            }
+        }
+
+    };
 //    private OnFragmentInteractionListener mListener;
 
     public DES_fragment() {
@@ -90,15 +127,15 @@ public class DES_fragment extends Fragment {
             public void onFocusChange(View v, boolean hasFocus) {
                 if (hasFocus) {
                     // 获得焦点
-                    editText.setEnabled(false);
                     Snackbar.make(v, "密钥长度为8个字符", Snackbar.LENGTH_INDEFINITE)
-                .setAction("确定", new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        editText.setEnabled(true);
-                    }
-                })
-                .show();
+                            .addCallback(callback)
+                            .setAction("确定", new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    editText.setEnabled(true);
+                                }
+                            })
+                    .show();
                 } else {
                     // 失去焦点
 
@@ -109,27 +146,25 @@ public class DES_fragment extends Fragment {
             @Override
             public void onClick(View v) {
                 check();
+                DESThread desThread=new DESThread();
+                desThread.run();
             }
         });
         return view;
     }
 
     private void check() {
-        String key=editText.getText().toString();
+        final String key=editText.getText().toString();
         if (key.length()!=8){
-            Snackbar snackbar=Snackbar.make(view,"密钥非法,是否随机密钥？",Snackbar.LENGTH_INDEFINITE).setAction("确定", new View.OnClickListener() {
+            Snackbar.make(view,"密钥非法,是否随机密钥？",Snackbar.LENGTH_INDEFINITE).setAction("确定", new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-
+                    deskey= RandomString.getRandomString(8);
+                    editText.setText(deskey);
                 }
-            }).setAction("cancel", new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-
-                }
-            });
-            snackbar.show();
+            }) .addCallback(callback).show();
         }
+        deskey=key;
     }
 
     private void initview(){
@@ -145,7 +180,20 @@ public class DES_fragment extends Fragment {
 //                })
 //                .show();
     }
-
+class DESThread extends Thread{
+    @Override
+    public void run() {
+        super.run();
+        DES des=new DES(deskey);
+        String test="no word";
+        try {
+            byte[] b=des.encryptString(test);
+            String s=des.decryptString(b);
+        } catch (CryptoException e) {
+            e.printStackTrace();
+        }
+    }
+}
     // TODO: Rename method, update argument and hook method into UI event
 //    public void onButtonPressed(Uri uri) {
 //        if (mListener != null) {
