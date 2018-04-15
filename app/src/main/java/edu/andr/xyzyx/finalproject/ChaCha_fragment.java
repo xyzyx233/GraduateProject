@@ -28,6 +28,7 @@ public class ChaCha_fragment extends Fragment {
     // TODO: Rename and change types of parameters
     private String mParam1;
     private String mParam2;
+    private View view;
     private TextView textView;
 
 //    private OnFragmentInteractionListener mListener;
@@ -67,7 +68,13 @@ public class ChaCha_fragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View view= inflater.inflate(R.layout.fragment_cha_cha_fragment, container, false);
+        view= inflater.inflate(R.layout.fragment_cha_cha_fragment, container, false);
+        initview();
+
+        return view;
+    }
+
+    private void initview() {
         textView=(TextView)view.findViewById(R.id.about_chacha);
         textView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -77,7 +84,6 @@ public class ChaCha_fragment extends Fragment {
                 startActivity(intent);
             }
         });
-        return view;
     }
 
 //    // TODO: Rename method, update argument and hook method into UI event

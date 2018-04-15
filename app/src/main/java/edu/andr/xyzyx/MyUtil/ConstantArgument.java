@@ -5,6 +5,8 @@ package edu.andr.xyzyx.MyUtil;
  */
 
 public interface ConstantArgument {
+    int REQUESTCODE_FROM_ACTIVITY = 1000;
+
     String TESTFILE_1="test1.txt";
     String TESTFILE_2="test2.txt";
     String TESTFILE_3="test3.txt";

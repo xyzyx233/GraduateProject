@@ -1,8 +1,11 @@
 package edu.andr.xyzyx.finalproject;
 
+import android.app.ActionBar;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
@@ -12,6 +15,7 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
@@ -30,6 +34,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         toolbar=(Toolbar)findViewById(R.id.toolbar);
         drawerLayout=(DrawerLayout)findViewById(R.id.drawerlayout);
         navigationView=(NavigationView)findViewById(R.id.nav_view);
+//        PackageManager packageManager = null;
+//        ApplicationInfo applicationInfo = null;
+//        try {
+//            packageManager = getApplicationContext().getPackageManager();
+//            applicationInfo = packageManager.getApplicationInfo(getPackageName(), 0);
+//        } catch (PackageManager.NameNotFoundException e) {
+//            applicationInfo = null;
+//        }
+//        String applicationName =
+//                (String) packageManager.getApplicationLabel(applicationInfo);
+//        Log.i("test",applicationName);
         toggle=new ActionBarDrawerToggle(this,drawerLayout,toolbar,R.string.navigation_drawer_open,R.string.navigation_drawer_close);
         fragmentManager=getFragmentManager();
     }

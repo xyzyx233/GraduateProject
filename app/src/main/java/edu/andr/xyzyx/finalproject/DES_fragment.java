@@ -185,10 +185,11 @@ class DESThread extends Thread{
     public void run() {
         super.run();
         DES des=new DES(deskey);
-        String result="";
+        String result;
+        String test;
         FilerHelper filehelper=new FilerHelper(getContext());
         try {
-            String test=filehelper.readAssetsFile(TESTFILE_1);
+            test=filehelper.readAssetsFile(TESTFILE_1);
             byte[] b=des.encryptString(test);
             result=des.decryptString(b);
             Log.i("test",result);

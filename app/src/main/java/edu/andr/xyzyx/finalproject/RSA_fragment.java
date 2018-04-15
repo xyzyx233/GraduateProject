@@ -15,6 +15,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -123,14 +124,19 @@ public class RSA_fragment extends Fragment {
         pubbtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
-
+                Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+                intent.setType("*/*");//设置类型，我这里是任意类型，任意后缀的可以这样写。
+                intent.addCategory(Intent.CATEGORY_OPENABLE);
+                startActivityForResult(intent,1);
             }
         });
         pribtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
+                Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+                intent.setType("*/*");//设置类型，我这里是任意类型，任意后缀的可以这样写。
+                intent.addCategory(Intent.CATEGORY_OPENABLE);
+                startActivityForResult(intent,2);
             }
         });
         button.setOnClickListener(new View.OnClickListener() {
@@ -142,7 +148,17 @@ public class RSA_fragment extends Fragment {
         });
         return view;
     }
-
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (resultCode == getActivity().RESULT_OK) {
+            if (requestCode == 1) {
+                Uri uri = data.getData();
+                Log.i("test",uri.toString());
+            }if (requestCode == 2) {
+                Uri uri = data.getData();
+                Log.i("test",uri.toString());
+            }
+        }
+    }
     private void initview() {
         textView=(TextView)view.findViewById(R.id.about_rsa);
         button=(Button)view.findViewById(R.id.btn_rsa);
