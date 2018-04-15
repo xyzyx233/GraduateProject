@@ -5,12 +5,14 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.app.Fragment;
+import android.support.design.widget.Snackbar;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 
 /**
@@ -30,6 +32,7 @@ public class DES_fragment extends Fragment {
     // TODO: Rename and change types of parameters
     private String mParam1;
     private String mParam2;
+    private View view;
     private TextView textView;
     private Button button;
     private EditText editText;
@@ -71,14 +74,35 @@ public class DES_fragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View view= inflater.inflate(R.layout.fragment_des_fragment, container, false);
-        initview(view);
+        final View view= inflater.inflate(R.layout.fragment_des_fragment, container, false);
+        this.view=view;
+        initview();
         textView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Uri uri=Uri.parse("https://zh.wikipedia.org/wiki/%E8%B3%87%E6%96%99%E5%8A%A0%E5%AF%86%E6%A8%99%E6%BA%96");
                 Intent intent=new Intent(Intent.ACTION_VIEW,uri);
                 startActivity(intent);
+            }
+        });
+        editText.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                if (hasFocus) {
+                    // 获得焦点
+                    editText.setEnabled(false);
+                    Snackbar.make(v, "密钥长度为8个字符", Snackbar.LENGTH_INDEFINITE)
+                .setAction("确定", new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        editText.setEnabled(true);
+                    }
+                })
+                .show();
+                } else {
+                    // 失去焦点
+
+                }
             }
         });
         button.setOnClickListener(new View.OnClickListener() {
@@ -91,9 +115,24 @@ public class DES_fragment extends Fragment {
     }
 
     private void check() {
+        String key=editText.getText().toString();
+        if (key.length()!=8){
+            Snackbar snackbar=Snackbar.make(view,"密钥非法,是否随机密钥？",Snackbar.LENGTH_INDEFINITE).setAction("确定", new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+
+                }
+            }).setAction("cancel", new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+
+                }
+            });
+            snackbar.show();
+        }
     }
 
-    private void initview(View view){
+    private void initview(){
         textView=(TextView)view.findViewById(R.id.about_des);
         button=(Button)view.findViewById(R.id.btn_des);
         editText=(EditText)view.findViewById(R.id.des_key);
@@ -106,6 +145,7 @@ public class DES_fragment extends Fragment {
 //                })
 //                .show();
     }
+
     // TODO: Rename method, update argument and hook method into UI event
 //    public void onButtonPressed(Uri uri) {
 //        if (mListener != null) {
