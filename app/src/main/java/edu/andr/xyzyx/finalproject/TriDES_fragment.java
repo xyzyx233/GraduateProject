@@ -5,10 +5,19 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.app.Fragment;
+import android.os.Handler;
+import android.os.Message;
+import android.support.design.widget.Snackbar;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.TextView;
+
+import edu.andr.xyzyx.MyUtil.TriDES;
 
 
 /**
@@ -28,7 +37,39 @@ public class TriDES_fragment extends Fragment {
     // TODO: Rename and change types of parameters
     private String mParam1;
     private String mParam2;
+    private String trideskey;
+    private View view;
     private TextView textView;
+    private Button button;
+    private EditText editText;
+
+    private Snackbar.Callback callback=new Snackbar.Callback() {
+        @Override
+        public void onDismissed(Snackbar snackbar, int event) {
+            editText.setEnabled(true);
+        }
+
+        @Override
+        public void onShown(Snackbar snackbar) {
+            editText.setEnabled(false);
+        }
+    };
+
+    private Handler mHandler = new Handler(){
+
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+            switch (msg.what) {
+                case 0:
+                    //do something,refresh UI;
+                    break;
+                default:
+                    break;
+            }
+        }
+
+    };
 
 //    private OnFragmentInteractionListener mListener;
 
@@ -67,8 +108,8 @@ public class TriDES_fragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View view= inflater.inflate(R.layout.fragment_tri_des_fragment, container, false);
-        textView=(TextView)view.findViewById(R.id.about_tdes);
+        view= inflater.inflate(R.layout.fragment_tri_des_fragment, container, false);
+        initview();
         textView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -77,9 +118,50 @@ public class TriDES_fragment extends Fragment {
                 startActivity(intent);
             }
         });
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(!check())
+                    return;
+                TriDESThread triDESThread=new TriDESThread();
+                triDESThread.run();
+            }
+        });
         return view;
     }
 
+    private boolean check() {
+        if(editText.getText().toString().length()<=0)
+            return false;
+        trideskey=editText.getText().toString();
+        return true;
+    }
+
+    private void initview() {
+        textView=(TextView)view.findViewById(R.id.about_tdes);
+        button=(Button) view.findViewById(R.id.btn_tdes);
+        editText=(EditText)view.findViewById(R.id.tdes_key);
+        Snackbar.make(getActivity().findViewById(android.R.id.content), "密钥长度为任意", Snackbar.LENGTH_INDEFINITE)
+                .addCallback(callback)
+                .setAction("确定", new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+
+                    }
+                })
+                .show();
+    }
+
+    class TriDESThread extends Thread{
+        @Override
+        public void run() {
+            super.run();
+            TriDES triDES=new TriDES();
+            byte[] m=triDES.encryptMode("test again!".getBytes(),trideskey);
+            String result=new String(triDES.decryptMode(m,trideskey));
+            Log.i("test",result);
+        }
+    }
 //    // TODO: Rename method, update argument and hook method into UI event
 //    public void onButtonPressed(Uri uri) {
 //        if (mListener != null) {

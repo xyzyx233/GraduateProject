@@ -5,6 +5,8 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.app.Fragment;
+import android.os.Handler;
+import android.os.Message;
 import android.support.design.widget.Snackbar;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -41,6 +43,33 @@ public class AES_fragment extends Fragment implements ConstantArgument{
     private Button button;
     private View view;
 
+    private Snackbar.Callback callback=new Snackbar.Callback() {
+        @Override
+        public void onDismissed(Snackbar snackbar, int event) {
+            editText.setEnabled(true);
+        }
+
+        @Override
+        public void onShown(Snackbar snackbar) {
+            editText.setEnabled(false);
+        }
+    };
+
+    private Handler mHandler = new Handler(){
+
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+            switch (msg.what) {
+                case 0:
+                    //do something,refresh UI;
+                    break;
+                default:
+                    break;
+            }
+        }
+
+    };
 //    private OnFragmentInteractionListener mListener;
 
     public AES_fragment() {
@@ -91,35 +120,61 @@ public class AES_fragment extends Fragment implements ConstantArgument{
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                AES aes=new AES();
-                FilerHelper filerHelper=new FilerHelper(getContext());
-                try {
-//                    String test=filerHelper.readAssetsFile(TESTFILE_1);
-                    byte[] rawkey=aes.getRawKey(editText.getText().toString().getBytes());
-                    byte[] en=aes.encrypt(rawkey,"test again".getBytes());
-                    String result=new String(aes.decrypt(rawkey,en));
-                    Log.i("test",result);
-//                    filerHelper.writeDateFile(AESOUT_1,result.getBytes());
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                if(!check())
+                    return;
+                AESThread aesThread=new AESThread();
+                aesThread.run();
             }
         });
 
         return view;
     }
+
+    private boolean check() {
+        if(editText.getText().toString().length()<=0) {
+            Snackbar.make(view, "密钥长度不合理", Snackbar.LENGTH_INDEFINITE)
+                    .setAction("确定", new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            editText.setFocusable(true);
+                        }
+                    })
+                    .addCallback(callback)
+                    .show();
+            return false;
+        }
+        return true;
+    }
+
     private void initview(){
         button=(Button) view.findViewById(R.id.btn_aes);
         editText=(EditText)view.findViewById(R.id.aes_key);
         textView=(TextView)view.findViewById(R.id.about_aes);
-        Snackbar.make(view, "密钥长度任意", Snackbar.LENGTH_INDEFINITE)
+        Snackbar.make(getActivity().findViewById(android.R.id.content), "密钥长度任意", Snackbar.LENGTH_INDEFINITE)
                 .setAction("确定", new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        editText.setEnabled(true);
                     }
-                })
+                }).addCallback(callback)
                 .show();
+    }
+    class AESThread extends Thread{
+        @Override
+        public void run() {
+            super.run();
+            AES aes=new AES();
+            FilerHelper filerHelper=new FilerHelper(getContext());
+            try {
+//                    String test=filerHelper.readAssetsFile(TESTFILE_1);
+                byte[] rawkey=aes.getRawKey(editText.getText().toString().getBytes());
+                byte[] en=aes.encrypt(rawkey,"test again".getBytes());
+                String result=new String(aes.decrypt(rawkey,en));
+                Log.i("test",result);
+//                    filerHelper.writeDateFile(AESOUT_1,result.getBytes());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 //    // TODO: Rename method, update argument and hook method into UI event
 //    public void onButtonPressed(Uri uri) {

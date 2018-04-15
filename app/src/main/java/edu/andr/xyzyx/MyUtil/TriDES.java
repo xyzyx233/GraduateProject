@@ -14,7 +14,7 @@ public class TriDES {
     // 定义加密算法，DESede即3DES
     private static final String Algorithm = "DESede";
     // 加密密钥
-    private static final String PASSWORD_CRYPT_KEY = "zhaokaiqiang1992";
+//    private static final String  Trikey= "zhaokaiqiang1992";
 
     /**
      * 加密方法
@@ -23,11 +23,11 @@ public class TriDES {
      *            源数据的字节数组
      * @return
      */
-    public static byte[] encryptMode(byte[] src) {
+    public byte[] encryptMode(byte[] src,String Trikey) {
         try {
             // 生成密钥
             SecretKey deskey = new SecretKeySpec(
-                    build3DesKey(PASSWORD_CRYPT_KEY), Algorithm);
+                    build3DesKey(Trikey), Algorithm);
             // 实例化Cipher
             Cipher cipher = Cipher.getInstance(Algorithm);
             cipher.init(Cipher.ENCRYPT_MODE, deskey);
@@ -49,10 +49,10 @@ public class TriDES {
      *            密文的字节数组
      * @return
      */
-    public static byte[] decryptMode(byte[] src) {
+    public byte[] decryptMode(byte[] src,String Trikey) {
         try {
             SecretKey deskey = new SecretKeySpec(
-                    build3DesKey(PASSWORD_CRYPT_KEY), Algorithm);
+                    build3DesKey(Trikey), Algorithm);
             Cipher c1 = Cipher.getInstance(Algorithm);
             c1.init(Cipher.DECRYPT_MODE, deskey);
             return c1.doFinal(src);
@@ -73,7 +73,7 @@ public class TriDES {
      * @return
      * @throws UnsupportedEncodingException
      */
-    public static byte[] build3DesKey(String keyStr)
+    public byte[] build3DesKey(String keyStr)
             throws UnsupportedEncodingException {
         byte[] key = new byte[24];
         byte[] temp = keyStr.getBytes("UTF-8");

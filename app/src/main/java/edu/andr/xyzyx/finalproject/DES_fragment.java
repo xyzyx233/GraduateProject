@@ -147,7 +147,8 @@ public class DES_fragment extends Fragment implements ConstantArgument{
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                check();
+                if(!check())
+                    return;
                 DESThread desThread=new DESThread();
                 desThread.run();
             }
@@ -155,7 +156,7 @@ public class DES_fragment extends Fragment implements ConstantArgument{
         return view;
     }
 
-    private void check() {
+    private boolean check() {
         final String key=editText.getText().toString();
         if (key.length()!=8){
             Snackbar.make(view,"密钥非法,是否随机密钥？",Snackbar.LENGTH_INDEFINITE).setAction("确定", new View.OnClickListener() {
@@ -165,8 +166,10 @@ public class DES_fragment extends Fragment implements ConstantArgument{
                     editText.setText(deskey);
                 }
             }) .addCallback(callback).show();
+            return false;
         }
         deskey=key;
+        return true;
     }
 
     private void initview(){
