@@ -1,6 +1,7 @@
 package edu.andr.xyzyx.MyUtil;
 
 import android.content.Context;
+import android.icu.util.Output;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -8,6 +9,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 
 /**
@@ -18,6 +20,16 @@ public class FilerHelper {
     public Context context;
     public FilerHelper(Context c){
         this.context=c;
+    }
+    public InputStream getFileInputStream(String path) throws FileNotFoundException {
+        File file=new File(path);
+        FileInputStream fileInputStream=new FileInputStream(file);
+        return fileInputStream;
+    }
+    public OutputStream getFileOutputStream(String path) throws FileNotFoundException {
+        File file=new File(path);
+        FileOutputStream fos=new FileOutputStream(file);
+        return fos;
     }
     public String readSDCardFile(String path) {
 

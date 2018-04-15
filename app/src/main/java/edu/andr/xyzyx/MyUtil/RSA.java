@@ -34,7 +34,7 @@ public class RSA {
      *
      * @return
      */
-    public static KeyPair generateRSAKeyPair()
+    public  KeyPair generateRSAKeyPair()
     {
         return generateRSAKeyPair(1024);
     }
@@ -47,7 +47,7 @@ public class RSA {
      *            一般1024
      * @return
      */
-    public static KeyPair generateRSAKeyPair(int keyLength)
+    public  KeyPair generateRSAKeyPair(int keyLength)
     {
         try
         {
@@ -71,7 +71,7 @@ public class RSA {
      *            公钥
      * @return 加密后的byte型数据
      */
-    public static byte[] encryptData(byte[] data, PublicKey publicKey)
+    public  byte[] encryptData(byte[] data, PublicKey publicKey)
     {
         try
         {
@@ -96,7 +96,7 @@ public class RSA {
      *            私钥
      * @return
      */
-    public static byte[] decryptData(byte[] encryptedData, PrivateKey privateKey)
+    public  byte[] decryptData(byte[] encryptedData, PrivateKey privateKey)
     {
         try
         {
@@ -117,7 +117,7 @@ public class RSA {
      * @throws NoSuchAlgorithmException
      * @throws InvalidKeySpecException
      */
-    public static PublicKey getPublicKey(byte[] keyBytes) throws NoSuchAlgorithmException,
+    public  PublicKey getPublicKey(byte[] keyBytes) throws NoSuchAlgorithmException,
             InvalidKeySpecException
     {
         X509EncodedKeySpec keySpec = new X509EncodedKeySpec(keyBytes);
@@ -134,7 +134,7 @@ public class RSA {
      * @throws NoSuchAlgorithmException
      * @throws InvalidKeySpecException
      */
-    public static PrivateKey getPrivateKey(byte[] keyBytes) throws NoSuchAlgorithmException,
+    public  PrivateKey getPrivateKey(byte[] keyBytes) throws NoSuchAlgorithmException,
             InvalidKeySpecException
     {
         PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(keyBytes);
@@ -152,7 +152,7 @@ public class RSA {
      * @throws NoSuchAlgorithmException
      * @throws InvalidKeySpecException
      */
-    public static PublicKey getPublicKey(String modulus, String publicExponent)
+    public  PublicKey getPublicKey(String modulus, String publicExponent)
             throws NoSuchAlgorithmException, InvalidKeySpecException
     {
         BigInteger bigIntModulus = new BigInteger(modulus);
@@ -172,7 +172,7 @@ public class RSA {
      * @throws NoSuchAlgorithmException
      * @throws InvalidKeySpecException
      */
-    public static PrivateKey getPrivateKey(String modulus, String privateExponent)
+    public  PrivateKey getPrivateKey(String modulus, String privateExponent)
             throws NoSuchAlgorithmException, InvalidKeySpecException
     {
         BigInteger bigIntModulus = new BigInteger(modulus);
@@ -191,7 +191,7 @@ public class RSA {
      * @throws Exception
      *             加载公钥时产生的异常
      */
-    public static PublicKey loadPublicKey(String publicKeyStr) throws Exception
+    public  PublicKey loadPublicKey(String publicKeyStr) throws Exception
     {
         try
         {       byte[] buffer = Base64.decode(publicKeyStr,Base64.DEFAULT);
@@ -218,7 +218,7 @@ public class RSA {
      * @return
      * @throws Exception
      */
-    public static PrivateKey loadPrivateKey(String privateKeyStr) throws Exception
+    public  PrivateKey loadPrivateKey(String privateKeyStr) throws Exception
     {
         try
         {
@@ -247,7 +247,7 @@ public class RSA {
      * @throws Exception
      *             加载公钥时产生的异常
      */
-    public static PublicKey loadPublicKey(InputStream in) throws Exception
+    public  PublicKey loadPublicKey(InputStream in) throws Exception
     {
         try
         {
@@ -269,7 +269,7 @@ public class RSA {
      * @return 是否成功
      * @throws Exception
      */
-    public static PrivateKey loadPrivateKey(InputStream in) throws Exception
+    public  PrivateKey loadPrivateKey(InputStream in) throws Exception
     {
         try
         {
@@ -290,7 +290,7 @@ public class RSA {
      * @return
      * @throws IOException
      */
-    private static String readKey(InputStream in) throws IOException
+    private  String readKey(InputStream in) throws IOException
     {
         BufferedReader br = new BufferedReader(new InputStreamReader(in));
         String readLine = null;
@@ -315,7 +315,7 @@ public class RSA {
      *
      * @param publicKey
      */
-    public static void printPublicKeyInfo(PublicKey publicKey)
+    public  void printPublicKeyInfo(PublicKey publicKey)
     {
         RSAPublicKey rsaPublicKey = (RSAPublicKey) publicKey;
         System.out.println("----------RSAPublicKey----------");
@@ -325,7 +325,7 @@ public class RSA {
         System.out.println("PublicExponent=" + rsaPublicKey.getPublicExponent().toString());
     }
 
-    public static void printPrivateKeyInfo(PrivateKey privateKey)
+    public  void printPrivateKeyInfo(PrivateKey privateKey)
     {
         RSAPrivateKey rsaPrivateKey = (RSAPrivateKey) privateKey;
         System.out.println("----------RSAPrivateKey ----------");

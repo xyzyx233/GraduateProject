@@ -42,6 +42,7 @@ public class TriDES_fragment extends Fragment {
     private TextView textView;
     private Button button;
     private EditText editText;
+    private TextView output;
 
     private Snackbar.Callback callback=new Snackbar.Callback() {
         @Override
@@ -110,14 +111,7 @@ public class TriDES_fragment extends Fragment {
         // Inflate the layout for this fragment
         view= inflater.inflate(R.layout.fragment_tri_des_fragment, container, false);
         initview();
-        textView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Uri uri=Uri.parse("https://zh.wikipedia.org/wiki/%E4%B8%89%E9%87%8D%E8%B3%87%E6%96%99%E5%8A%A0%E5%AF%86%E6%BC%94%E7%AE%97%E6%B3%95");
-                Intent intent=new Intent(Intent.ACTION_VIEW,uri);
-                startActivity(intent);
-            }
-        });
+
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -141,6 +135,7 @@ public class TriDES_fragment extends Fragment {
         textView=(TextView)view.findViewById(R.id.about_tdes);
         button=(Button) view.findViewById(R.id.btn_tdes);
         editText=(EditText)view.findViewById(R.id.tdes_key);
+        output=(TextView)view.findViewById(R.id.tdestest);
         Snackbar.make(getActivity().findViewById(android.R.id.content), "密钥长度为任意", Snackbar.LENGTH_INDEFINITE)
                 .addCallback(callback)
                 .setAction("确定", new View.OnClickListener() {
@@ -150,6 +145,14 @@ public class TriDES_fragment extends Fragment {
                     }
                 })
                 .show();
+        textView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Uri uri=Uri.parse("https://zh.wikipedia.org/wiki/%E4%B8%89%E9%87%8D%E8%B3%87%E6%96%99%E5%8A%A0%E5%AF%86%E6%BC%94%E7%AE%97%E6%B3%95");
+                Intent intent=new Intent(Intent.ACTION_VIEW,uri);
+                startActivity(intent);
+            }
+        });
     }
 
     class TriDESThread extends Thread{

@@ -19,6 +19,9 @@
     <string name="this_is_rsa"><u>What is RSA?</u></string>
     <string name="this_is_chacha"><u>What is CHaCha20?</u></string>
     <string name="key">密钥：</string>
+    <string name="pubkey">公钥：</string>
+    <string name="prikey">私钥：</string>
+    <string name="chosekey">选择文件</string>
     <string name="check">开始测试</string>
     <string name="testinfo">测试信息：</string>
     <string name="des_page">DES页</string>

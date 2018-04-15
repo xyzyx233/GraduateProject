@@ -42,6 +42,7 @@ public class AES_fragment extends Fragment implements ConstantArgument{
     private EditText editText;
     private Button button;
     private View view;
+    private TextView output;
 
     private Snackbar.Callback callback=new Snackbar.Callback() {
         @Override
@@ -109,14 +110,6 @@ public class AES_fragment extends Fragment implements ConstantArgument{
         // Inflate the layout for this fragment
         view= inflater.inflate(R.layout.fragment_aes_fragment, container, false);
         initview();
-        textView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Uri uri=Uri.parse("https://zh.wikipedia.org/wiki/%E9%AB%98%E7%BA%A7%E5%8A%A0%E5%AF%86%E6%A0%87%E5%87%86");
-                Intent intent=new Intent(Intent.ACTION_VIEW,uri);
-                startActivity(intent);
-            }
-        });
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -150,6 +143,7 @@ public class AES_fragment extends Fragment implements ConstantArgument{
         button=(Button) view.findViewById(R.id.btn_aes);
         editText=(EditText)view.findViewById(R.id.aes_key);
         textView=(TextView)view.findViewById(R.id.about_aes);
+        output=(TextView)view.findViewById(R.id.aestest);
         Snackbar.make(getActivity().findViewById(android.R.id.content), "密钥长度任意", Snackbar.LENGTH_INDEFINITE)
                 .setAction("确定", new View.OnClickListener() {
                     @Override
@@ -157,6 +151,14 @@ public class AES_fragment extends Fragment implements ConstantArgument{
                     }
                 }).addCallback(callback)
                 .show();
+        textView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Uri uri=Uri.parse("https://zh.wikipedia.org/wiki/%E9%AB%98%E7%BA%A7%E5%8A%A0%E5%AF%86%E6%A0%87%E5%87%86");
+                Intent intent=new Intent(Intent.ACTION_VIEW,uri);
+                startActivity(intent);
+            }
+        });
     }
     class AESThread extends Thread{
         @Override

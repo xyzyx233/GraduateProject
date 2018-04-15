@@ -46,6 +46,7 @@ public class DES_fragment extends Fragment implements ConstantArgument{
     private TextView textView;
     private Button button;
     private EditText editText;
+    private TextView output;
 
     private String deskey;
 
@@ -116,34 +117,6 @@ public class DES_fragment extends Fragment implements ConstantArgument{
         final View view= inflater.inflate(R.layout.fragment_des_fragment, container, false);
         this.view=view;
         initview();
-        textView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Uri uri=Uri.parse("https://zh.wikipedia.org/wiki/%E8%B3%87%E6%96%99%E5%8A%A0%E5%AF%86%E6%A8%99%E6%BA%96");
-                Intent intent=new Intent(Intent.ACTION_VIEW,uri);
-                startActivity(intent);
-            }
-        });
-        editText.setOnFocusChangeListener(new View.OnFocusChangeListener() {
-            @Override
-            public void onFocusChange(View v, boolean hasFocus) {
-                if (hasFocus) {
-                    // 获得焦点
-                    Snackbar.make(v, "密钥长度为8个字符", Snackbar.LENGTH_INDEFINITE)
-                            .addCallback(callback)
-                            .setAction("确定", new View.OnClickListener() {
-                                @Override
-                                public void onClick(View v) {
-                                    editText.setEnabled(true);
-                                }
-                            })
-                    .show();
-                } else {
-                    // 失去焦点
-
-                }
-            }
-        });
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -176,6 +149,36 @@ public class DES_fragment extends Fragment implements ConstantArgument{
         textView=(TextView)view.findViewById(R.id.about_des);
         button=(Button)view.findViewById(R.id.btn_des);
         editText=(EditText)view.findViewById(R.id.des_key);
+        output=(TextView)view.findViewById(R.id.destest);
+        textView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Uri uri=Uri.parse("https://zh.wikipedia.org/wiki/%E8%B3%87%E6%96%99%E5%8A%A0%E5%AF%86%E6%A8%99%E6%BA%96");
+                Intent intent=new Intent(Intent.ACTION_VIEW,uri);
+                startActivity(intent);
+            }
+        });
+        editText.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                if (hasFocus) {
+                    // 获得焦点
+                    Snackbar.make(v, "密钥长度为8个字符", Snackbar.LENGTH_INDEFINITE)
+                            .addCallback(callback)
+                            .setAction("确定", new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    editText.setEnabled(true);
+                                }
+                            })
+                            .show();
+                } else {
+                    // 失去焦点
+
+                }
+            }
+        });
+
     }
 class DESThread extends Thread{
     @Override
