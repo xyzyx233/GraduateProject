@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.app.Fragment;
+import android.support.design.widget.Snackbar;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -111,6 +112,14 @@ public class AES_fragment extends Fragment implements ConstantArgument{
         button=(Button) view.findViewById(R.id.btn_aes);
         editText=(EditText)view.findViewById(R.id.aes_key);
         textView=(TextView)view.findViewById(R.id.about_aes);
+        Snackbar.make(view, "密钥长度任意", Snackbar.LENGTH_INDEFINITE)
+                .setAction("确定", new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        editText.setEnabled(true);
+                    }
+                })
+                .show();
     }
 //    // TODO: Rename method, update argument and hook method into UI event
 //    public void onButtonPressed(Uri uri) {
