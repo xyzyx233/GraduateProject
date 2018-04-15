@@ -19,6 +19,7 @@ import org.spongycastle.crypto.CryptoException;
 
 import java.io.IOException;
 
+import edu.andr.xyzyx.MyUtil.ClockBean;
 import edu.andr.xyzyx.MyUtil.ConstantArgument;
 import edu.andr.xyzyx.MyUtil.DES;
 import edu.andr.xyzyx.MyUtil.FilerHelper;
@@ -67,12 +68,19 @@ public class DES_fragment extends Fragment implements ConstantArgument{
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
-            switch (msg.what) {
-                case 0:
-                    //do something,refresh UI;
-                    break;
-                default:
-                    break;
+            if (msg.what>0&&msg.what<6) {
+                //do something,refresh UI;
+                ClockBean clockBean = (ClockBean) msg.obj;
+                textView.append("\n");
+                textView.append("第"+msg.what+"个测试文件加密用时:");
+                textView.append(String.valueOf(clockBean.getDecrypt()));
+                textView.append("\n");
+                textView.append("第"+msg.what+"个测试文件解密用时:");
+                textView.append(String.valueOf(clockBean.getDecrypt()));
+            }
+            if(msg.what==6){
+                textView.append("\n");
+                textView.append("测试结束.");
             }
         }
 
@@ -188,16 +196,33 @@ class DESThread extends Thread{
         String result;
         String test;
         FilerHelper filehelper=new FilerHelper(getContext());
-        try {
-            test=filehelper.readAssetsFile(TESTFILE_1);
-            byte[] b=des.encryptString(test);
-            result=des.decryptString(b);
-            Log.i("test",result);
-            filehelper.writeDateFile(DESOUT_1,result.getBytes());
-        } catch (CryptoException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            Log.i("text","no test data file import");
+        for (int i=0;i<TEST_FILE_NUM;i++) {
+            try {
+                test = filehelper.readAssetsFile(TESTFILE[i]);
+                long startTime= System.currentTimeMillis();
+                byte[] b = des.encryptString(test);
+                long endTime = System.currentTimeMillis();
+                result = des.decryptString(b);
+                long finishTime = System.currentTimeMillis();
+                ClockBean clockBean=new ClockBean(startTime,endTime,finishTime);
+                if(mHandler!=null){
+                    Message message = mHandler.obtainMessage();
+                    message.what=i;
+                    message.obj=clockBean;
+                    mHandler.sendMessage(message);
+                }
+                Log.i("test", result);
+                filehelper.writeDateFile(DESOUT[i], result.getBytes());
+            } catch (CryptoException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                Log.i("text", "no test data file import");
+            }
+        }
+        if(mHandler!=null){
+            Message message = mHandler.obtainMessage();
+            message.what=6;
+            mHandler.sendMessage(message);
         }
     }
 }

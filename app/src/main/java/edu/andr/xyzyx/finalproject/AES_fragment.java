@@ -17,6 +17,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import edu.andr.xyzyx.MyUtil.AES;
+import edu.andr.xyzyx.MyUtil.ClockBean;
 import edu.andr.xyzyx.MyUtil.ConstantArgument;
 import edu.andr.xyzyx.MyUtil.FilerHelper;
 
@@ -61,12 +62,19 @@ public class AES_fragment extends Fragment implements ConstantArgument{
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
-            switch (msg.what) {
-                case 0:
-                    //do something,refresh UI;
-                    break;
-                default:
-                    break;
+            if (msg.what>0&&msg.what<6) {
+                //do something,refresh UI;
+                ClockBean clockBean = (ClockBean) msg.obj;
+                textView.append("\n");
+                textView.append("第"+msg.what+"个测试文件加密用时:");
+                textView.append(String.valueOf(clockBean.getDecrypt()));
+                textView.append("\n");
+                textView.append("第"+msg.what+"个测试文件解密用时:");
+                textView.append(String.valueOf(clockBean.getDecrypt()));
+            }
+            if(msg.what==6){
+                textView.append("\n");
+                textView.append("测试结束.");
             }
         }
 
@@ -166,15 +174,34 @@ public class AES_fragment extends Fragment implements ConstantArgument{
             super.run();
             AES aes=new AES();
             FilerHelper filerHelper=new FilerHelper(getContext());
-            try {
-//                    String test=filerHelper.readAssetsFile(TESTFILE_1);
-                byte[] rawkey=aes.getRawKey(editText.getText().toString().getBytes());
-                byte[] en=aes.encrypt(rawkey,"test again".getBytes());
-                String result=new String(aes.decrypt(rawkey,en));
-                Log.i("test",result);
-//                    filerHelper.writeDateFile(AESOUT_1,result.getBytes());
-            } catch (Exception e) {
-                e.printStackTrace();
+            for (int i=0;i<TEST_FILE_NUM;i++) {
+                try {
+                    String test=filerHelper.readAssetsFile(TESTFILE[i]);
+                    ClockBean clockBean=new ClockBean();
+                    long startTime= System.currentTimeMillis();
+                    byte[] rawkey = aes.getRawKey(editText.getText().toString().getBytes());
+                    byte[] en = aes.encrypt(rawkey, test.getBytes());
+                    long endTime = System.currentTimeMillis();
+                    String result = new String(aes.decrypt(rawkey, en));
+                    long finishTime = System.currentTimeMillis();
+//                    Log.i("test", result);
+                    clockBean.setEncrypt(endTime-startTime);
+                    clockBean.setDecrypt(finishTime-endTime);
+                    if(mHandler!=null){
+                        Message message = mHandler.obtainMessage();
+                        message.what=i;
+                        message.obj=clockBean;
+                        mHandler.sendMessage(message);
+                    }
+                    filerHelper.writeDateFile(AESOUT[i],result.getBytes());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+            if(mHandler!=null){
+                Message message = mHandler.obtainMessage();
+                message.what=6;
+                mHandler.sendMessage(message);
             }
         }
     }

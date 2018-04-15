@@ -23,10 +23,10 @@ import java.io.InputStream;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 
+import edu.andr.xyzyx.MyUtil.ClockBean;
+import edu.andr.xyzyx.MyUtil.ConstantArgument;
 import edu.andr.xyzyx.MyUtil.FilerHelper;
 import edu.andr.xyzyx.MyUtil.RSA;
-
-import static edu.andr.xyzyx.MyUtil.ConstantArgument.TESTFILE_1;
 
 
 /**
@@ -37,7 +37,7 @@ import static edu.andr.xyzyx.MyUtil.ConstantArgument.TESTFILE_1;
  * Use the {@link RSA_fragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class RSA_fragment extends Fragment {
+public class RSA_fragment extends Fragment implements ConstantArgument{
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
@@ -73,12 +73,19 @@ public class RSA_fragment extends Fragment {
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
-            switch (msg.what) {
-                case 0:
-                    //do something,refresh UI;
-                    break;
-                default:
-                    break;
+            if (msg.what>0&&msg.what<6) {
+                //do something,refresh UI;
+                ClockBean clockBean = (ClockBean) msg.obj;
+                textView.append("\n");
+                textView.append("第"+msg.what+"个测试文件加密用时:");
+                textView.append(String.valueOf(clockBean.getDecrypt()));
+                textView.append("\n");
+                textView.append("第"+msg.what+"个测试文件解密用时:");
+                textView.append(String.valueOf(clockBean.getDecrypt()));
+            }
+            if(msg.what==6){
+                textView.append("\n");
+                textView.append("测试结束.");
             }
         }
 
@@ -192,42 +199,69 @@ class RSAThread extends Thread{
         InputStream inPrivate=null;
         FilerHelper filerHelper=new FilerHelper(getContext());
         RSA rsa=new RSA();
-        try {
-            String source=filerHelper.readAssetsFile(TESTFILE_1);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        if(prikeypath==""&&pubkeypath==""){
-            // 从字符串中得到公钥
-            // PublicKey publicKey = RSAUtils.loadPublicKey(PUCLIC_KEY);
-            // 从文件中得到公钥
+        String source="";
+        for(int i=0;i<TEST_FILE_NUM;i++) {
             try {
-                inPublic= getResources().getAssets().open("rsa_public_key.pem");
-                inPrivate = getResources().getAssets().open("pkcs8_rsa_private_key.pem");
+                source= filerHelper.readAssetsFile(TESTFILE[i]);
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }else {
+            if (prikeypath == "" && pubkeypath == "") {
+                // 从字符串中得到公钥
+                // PublicKey publicKey = RSAUtils.loadPublicKey(PUCLIC_KEY);
+                // 从文件中得到公钥
+                try {
+                    inPublic = getResources().getAssets().open("rsa_public_key.pem");
+                    inPrivate = getResources().getAssets().open("pkcs8_rsa_private_key.pem");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            } else {
+                try {
+                    inPublic = filerHelper.getFileInputStream(pubkeypath);
+                    inPrivate = filerHelper.getFileInputStream(prikeypath);
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                }
+            }
+            long startTime= System.currentTimeMillis();
             try {
-                inPublic=filerHelper.getFileInputStream(pubkeypath);
-                inPrivate=filerHelper.getFileInputStream(prikeypath);
-            } catch (FileNotFoundException e) {
+                publicKey = rsa.loadPublicKey(inPublic);
+            } catch (Exception e) {
                 e.printStackTrace();
             }
+            // 加密
+            byte[] encryptByte = rsa.encryptData(source.getBytes(), publicKey);
+            // 为了方便观察吧加密后的数据用base64加密转一下，要不然看起来是乱码,所以解密是也是要用Base64先转换
+            String afterencrypt = new String(Base64.encode(encryptByte, Base64.DEFAULT));
+            long endTime = System.currentTimeMillis();
+            try {
+                privateKey = rsa.loadPrivateKey(inPrivate);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            byte[] decryptByte = rsa.decryptData(Base64.decode(afterencrypt, Base64.DEFAULT), privateKey);
+            long finishTime = System.currentTimeMillis();
+            String decryptStr = new String(decryptByte);
+            ClockBean clockBean=new ClockBean(startTime,endTime,finishTime);
+            if(mHandler!=null){
+                Message message = mHandler.obtainMessage();
+                message.what=i;
+                message.obj=clockBean;
+                mHandler.sendMessage(message);
+            }
+            try {
+                filerHelper.writeDateFile(RSAOUT[i],decryptStr.getBytes());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+//            Log.i("test", decryptStr);
         }
-        try {
-            publicKey = rsa.loadPublicKey(inPublic);
-            privateKey= rsa.loadPrivateKey(inPrivate);
-        } catch (Exception e) {
-            e.printStackTrace();
+        if(mHandler!=null){
+            Message message = mHandler.obtainMessage();
+            message.what=6;
+            mHandler.sendMessage(message);
         }
-        // 加密
-        byte[] encryptByte = rsa.encryptData("source".getBytes(), publicKey);
-        // 为了方便观察吧加密后的数据用base64加密转一下，要不然看起来是乱码,所以解密是也是要用Base64先转换
-        String afterencrypt =new String(Base64.encode(encryptByte,Base64.DEFAULT));
-        byte[] decryptByte = rsa.decryptData(Base64.decode(afterencrypt,Base64.DEFAULT), privateKey);
-        String decryptStr = new String(decryptByte);
-        Log.i("test",decryptStr);
     }
 }
 //    // TODO: Rename method, update argument and hook method into UI event

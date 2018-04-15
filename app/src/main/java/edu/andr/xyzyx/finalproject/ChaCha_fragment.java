@@ -26,8 +26,10 @@ import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 
 import edu.andr.xyzyx.MyUtil.ChaCha;
+import edu.andr.xyzyx.MyUtil.ClockBean;
 import edu.andr.xyzyx.MyUtil.ConstantArgument;
 import edu.andr.xyzyx.MyUtil.FilerHelper;
+import edu.andr.xyzyx.MyUtil.GetChachaKeyandIV;
 
 
 /**
@@ -51,19 +53,17 @@ public class ChaCha_fragment extends Fragment implements ConstantArgument{
     private View view;
     private TextView textView;
     private Button button;
-    private EditText chachakey,chachaiv;
+    private EditText chachakey;
 
     private Snackbar.Callback callback=new Snackbar.Callback() {
         @Override
         public void onDismissed(Snackbar snackbar, int event) {
             chachakey.setEnabled(true);
-            chachaiv.setEnabled(true);
         }
 
         @Override
         public void onShown(Snackbar snackbar) {
             chachakey.setEnabled(false);
-            chachaiv.setEnabled(false);
         }
     };
 
@@ -72,12 +72,19 @@ public class ChaCha_fragment extends Fragment implements ConstantArgument{
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
-            switch (msg.what) {
-                case 0:
-                    //do something,refresh UI;
-                    break;
-                default:
-                    break;
+            if (msg.what>0&&msg.what<6) {
+                //do something,refresh UI;
+                ClockBean clockBean = (ClockBean) msg.obj;
+                textView.append("\n");
+                textView.append("第"+msg.what+"个测试文件加密用时:");
+                textView.append(String.valueOf(clockBean.getDecrypt()));
+                textView.append("\n");
+                textView.append("第"+msg.what+"个测试文件解密用时:");
+                textView.append(String.valueOf(clockBean.getDecrypt()));
+            }
+            if(msg.what==6){
+                textView.append("\n");
+                textView.append("测试结束.");
             }
         }
 
@@ -127,7 +134,7 @@ public class ChaCha_fragment extends Fragment implements ConstantArgument{
             public void onFocusChange(View v, boolean hasFocus) {
                 if(!hasFocus){
                     String tkey=chachakey.getText().toString();
-                    if(tkey.getBytes().length!=32)
+                    if(tkey.getBytes().length==0)
                         Snackbar.make(v,"密钥格式错误",Snackbar.LENGTH_INDEFINITE)
                         .setAction("确认", new View.OnClickListener() {
                             @Override
@@ -140,80 +147,42 @@ public class ChaCha_fragment extends Fragment implements ConstantArgument{
                 }
             }
         });
-        chachaiv.setOnFocusChangeListener(new View.OnFocusChangeListener() {
-            @Override
-            public void onFocusChange(View v, boolean hasFocus) {
-                if(!hasFocus){
-                    String tiv=chachaiv.getText().toString();
-                    if(tiv.getBytes().length!=8) {
-                        Snackbar.make(v, "IV格式错误", Snackbar.LENGTH_INDEFINITE)
-                                .setAction("确认", new View.OnClickListener() {
-                                    @Override
-                                    public void onClick(View v) {
-                                        chachakey.setFocusable(true);
-                                    }
-                                })
-                                .addCallback(callback).show();
-                    }
-                    iv=tiv.getBytes();
-                }
-            }
-        });
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                switch (check()){
-                    case 1:
-                        Snackbar.make(v,"s密钥格式错误",Snackbar.LENGTH_INDEFINITE)
-                                .setAction("确认", new View.OnClickListener() {
-                                    @Override
-                                    public void onClick(View v) {
-                                        chachakey.setFocusable(true);
-                                    }
-                                })
-                                .addCallback(callback).show();
-                        return;
-                    case 2:
-                        Snackbar.make(v,"sIV格式错误",Snackbar.LENGTH_INDEFINITE)
-                                .setAction("确认", new View.OnClickListener() {
-                                    @Override
-                                    public void onClick(View v) {
-                                        chachakey.setFocusable(true);
-                                    }
-                                })
-                                .addCallback(callback).show();
-                        return;
-                    case 0:
-                        key=chachakey.getText().toString().getBytes();
-                        iv=chachaiv.getText().toString().getBytes();
-                        break;
-                    default:
-
-                        break;
-
+                if(!check()){
+                    Snackbar.make(getActivity().findViewById(android.R.id.content), "密钥为空", Snackbar.LENGTH_INDEFINITE)
+                            .setAction("确定", new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    chachakey.setFocusable(true);
+                                }
+                            })
+                            .show();
+                    return;
                 }
+                Log.i("test",GetChachaKeyandIV.sha(chachakey.getText().toString()));
+                key=GetChachaKeyandIV.sha(chachakey.getText().toString()).substring(0, 31).getBytes();
+                iv=GetChachaKeyandIV.sha(chachakey.getText().toString()).substring(31, 39).getBytes();
+                Log.i("test",new String(key));
+                Log.i("test",new String(iv));
                 ChachaThread chachaThread=new ChachaThread();
-                chachaThread.run();
+//                chachaThread.run();
             }
         });
         return view;
     }
 
-    private int check() {
-        String tkey=chachakey.getText().toString();
-        if(tkey.getBytes().length!=32)
-            return 1;
-        String tiv=chachaiv.getText().toString();
-        if(tiv.getBytes().length!=8)
-            return 2;
-        return 0;
+    private boolean check() {
+        if(chachakey.getText().toString().length()==0)
+            return false;
+        return true;
     }
 
     private void initview() {
         textView=(TextView)view.findViewById(R.id.about_chacha);
         button=(Button)view.findViewById(R.id.btn_chacha);
         chachakey=(EditText)view.findViewById(R.id.chacha_key);
-        chachaiv=(EditText)view.findViewById(R.id.chacha_iv);
         textView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -222,13 +191,12 @@ public class ChaCha_fragment extends Fragment implements ConstantArgument{
                 startActivity(intent);
             }
         });
-        Snackbar.make(getActivity().findViewById(android.R.id.content), "密钥长度为4个字节,初始IV为2字节", Snackbar.LENGTH_INDEFINITE)
+        Snackbar.make(getActivity().findViewById(android.R.id.content), "密钥长度任意", Snackbar.LENGTH_INDEFINITE)
                 .addCallback(callback)
                 .setAction("确定", new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
                         chachakey.setEnabled(true);
-                        chachaiv.setEnabled(true);
                     }
                 })
                 .show();
@@ -245,17 +213,37 @@ public class ChaCha_fragment extends Fragment implements ConstantArgument{
             ByteArrayOutputStream osEnc= new ByteArrayOutputStream();
             ChaCha chaCha=new ChaCha();
             FilerHelper filerHelper=new FilerHelper(getContext());
-//            in= filerHelper.readSDCardFile(TESTFILE_1);
-            fis=new ByteArrayInputStream("in".getBytes());
-            ByteArrayOutputStream osDec=new ByteArrayOutputStream();
-            try {chaCha.encChaCha(fis,osEnc,key,iv);
-                isDec = new ByteArrayInputStream(osEnc.toByteArray());
-                chaCha.decChaCha(isDec,osDec,key,iv);
-            } catch (IOException e) {
-                e.printStackTrace();
+            for (int i=0;i<TEST_FILE_NUM;i++) {
+                in = filerHelper.readSDCardFile(TESTFILE[i]);
+                long startTime= System.currentTimeMillis();
+                fis = new ByteArrayInputStream(in.getBytes());
+                ByteArrayOutputStream osDec = new ByteArrayOutputStream();
+                long endTime=0;
+                long finishTime=0;
+                try {
+                    chaCha.encChaCha(fis, osEnc, key, iv);
+                    endTime= System.currentTimeMillis();
+                    isDec = new ByteArrayInputStream(osEnc.toByteArray());
+                    chaCha.decChaCha(isDec, osDec, key, iv);
+                    finishTime = System.currentTimeMillis();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                ClockBean clockBean=new ClockBean(startTime,endTime,finishTime);
+                if(mHandler!=null){
+                    Message message = mHandler.obtainMessage();
+                    message.what=i;
+                    message.obj=clockBean;
+                    mHandler.sendMessage(message);
+                }
+//            Log.i("test",new String(osDec.toByteArray()));
+                filerHelper.writeSDCardFile(CHAOUT[i], osDec.toByteArray());
             }
-            Log.i("test",new String(osDec.toByteArray()));
-//            filerHelper.writeSDCardFile(CHAOUT_1,osDec.toByteArray());
+            if(mHandler!=null){
+                Message message = mHandler.obtainMessage();
+                message.what=6;
+                mHandler.sendMessage(message);
+            }
         }
     }
 

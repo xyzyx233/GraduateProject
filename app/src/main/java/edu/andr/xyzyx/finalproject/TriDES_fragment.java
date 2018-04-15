@@ -17,6 +17,11 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import java.io.IOException;
+
+import edu.andr.xyzyx.MyUtil.ClockBean;
+import edu.andr.xyzyx.MyUtil.ConstantArgument;
+import edu.andr.xyzyx.MyUtil.FilerHelper;
 import edu.andr.xyzyx.MyUtil.TriDES;
 
 
@@ -28,7 +33,7 @@ import edu.andr.xyzyx.MyUtil.TriDES;
  * Use the {@link TriDES_fragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class TriDES_fragment extends Fragment {
+public class TriDES_fragment extends Fragment implements ConstantArgument{
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
@@ -61,12 +66,19 @@ public class TriDES_fragment extends Fragment {
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
-            switch (msg.what) {
-                case 0:
-                    //do something,refresh UI;
-                    break;
-                default:
-                    break;
+            if (msg.what>0&&msg.what<6) {
+                //do something,refresh UI;
+                ClockBean clockBean = (ClockBean) msg.obj;
+                textView.append("\n");
+                textView.append("第"+msg.what+"个测试文件加密用时:");
+                textView.append(String.valueOf(clockBean.getDecrypt()));
+                textView.append("\n");
+                textView.append("第"+msg.what+"个测试文件解密用时:");
+                textView.append(String.valueOf(clockBean.getDecrypt()));
+            }
+            if(msg.what==6){
+                textView.append("\n");
+                textView.append("测试结束.");
             }
         }
 
@@ -160,9 +172,38 @@ public class TriDES_fragment extends Fragment {
         public void run() {
             super.run();
             TriDES triDES=new TriDES();
-            byte[] m=triDES.encryptMode("test again!".getBytes(),trideskey);
-            String result=new String(triDES.decryptMode(m,trideskey));
-            Log.i("test",result);
+            FilerHelper filerHelper=new FilerHelper(getContext());
+            String in="";
+            for (int i=0;i<TEST_FILE_NUM;i++) {
+                try {
+                    in = filerHelper.readAssetsFile(TESTFILE[i]);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                long startTime= System.currentTimeMillis();
+                byte[] m = triDES.encryptMode(in.getBytes(), trideskey);
+                long endTime = System.currentTimeMillis();
+                byte[] r=triDES.decryptMode(m, trideskey);
+                long finishTime = System.currentTimeMillis();
+                String result = new String(r);
+                ClockBean clockBean=new ClockBean(startTime,endTime,finishTime);
+                if(mHandler!=null){
+                    Message message = mHandler.obtainMessage();
+                    message.what=i;
+                    message.obj=clockBean;
+                    mHandler.sendMessage(message);
+                }
+                try {
+                    filerHelper.writeDateFile(TDESOUT[i], result.getBytes());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            if(mHandler!=null){
+                Message message = mHandler.obtainMessage();
+                message.what=6;
+                mHandler.sendMessage(message);
+            }
         }
     }
 //    // TODO: Rename method, update argument and hook method into UI event
