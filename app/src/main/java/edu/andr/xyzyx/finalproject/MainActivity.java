@@ -4,6 +4,7 @@ import android.app.ActionBar;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
+import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.support.annotation.NonNull;
@@ -20,7 +21,13 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 
-public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener{
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+
+import edu.andr.xyzyx.MyUtil.ConstantArgument;
+
+public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener,ConstantArgument{
     private SlidingLeftView slidingLeftView;
     private FragmentManager fragmentManager;
     private FragmentTransaction fragmentTransaction;
@@ -34,6 +41,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         toolbar=(Toolbar)findViewById(R.id.toolbar);
         drawerLayout=(DrawerLayout)findViewById(R.id.drawerlayout);
         navigationView=(NavigationView)findViewById(R.id.nav_view);
+        checkandcreatefile();
 //        PackageManager packageManager = null;
 //        ApplicationInfo applicationInfo = null;
 //        try {
@@ -47,6 +55,32 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 //        Log.i("test",applicationName);
         toggle=new ActionBarDrawerToggle(this,drawerLayout,toolbar,R.string.navigation_drawer_open,R.string.navigation_drawer_close);
         fragmentManager=getFragmentManager();
+    }
+
+    private void checkandcreatefile() {
+        for (int i=0;i<TEST_FILE_NUM;i++) {
+            try {
+                FileOutputStream fos1 = getApplicationContext().openFileOutput(DESOUT[i], Context.MODE_PRIVATE);
+                FileOutputStream fos2 = getApplicationContext().openFileOutput(AESOUT[i], Context.MODE_PRIVATE);
+                FileOutputStream fos3 = getApplicationContext().openFileOutput(TDESOUT[i], Context.MODE_PRIVATE);
+                FileOutputStream fos4 = getApplicationContext().openFileOutput(RSAOUT[i], Context.MODE_PRIVATE);
+                FileOutputStream fos5 = getApplicationContext().openFileOutput(CHAOUT[i], Context.MODE_PRIVATE);
+                fos1.write("".getBytes());
+                fos1.close();
+                fos2.write("".getBytes());
+                fos2.close();
+                fos3.write("".getBytes());
+                fos3.close();
+                fos4.write("".getBytes());
+                fos4.close();
+                fos5.write("".getBytes());
+                fos5.close();
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     @Override
