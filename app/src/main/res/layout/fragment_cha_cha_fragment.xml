@@ -18,7 +18,7 @@
             android:layout_alignParentTop="true"
             android:layout_centerHorizontal="true"
             android:text="@string/chacha_page"
-            android:textSize="@dimen/pageinfo" />
+            android:textSize="40sp" />
 
         <ScrollView
             android:layout_width="match_parent"
@@ -27,7 +27,7 @@
             android:layout_below="@+id/chachainfo">
 
             <TextView
-                android:id="@+id/chahcatest"
+                android:id="@+id/chachatest"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_above="@+id/linearLayout"

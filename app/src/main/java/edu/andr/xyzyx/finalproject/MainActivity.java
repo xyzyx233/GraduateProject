@@ -7,6 +7,9 @@ import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.os.AsyncTask;
+import android.os.Handler;
+import android.os.Message;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
@@ -25,6 +28,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
+import edu.andr.xyzyx.MyUtil.ClockBean;
 import edu.andr.xyzyx.MyUtil.ConstantArgument;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener,ConstantArgument{
@@ -37,11 +41,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private ActionBarDrawerToggle toggle;
     private NavigationView navigationView;
 
+
     private void initview(){
         toolbar=(Toolbar)findViewById(R.id.toolbar);
         drawerLayout=(DrawerLayout)findViewById(R.id.drawerlayout);
         navigationView=(NavigationView)findViewById(R.id.nav_view);
-        checkandcreatefile();
+//        checkandcreatefile();
 //        PackageManager packageManager = null;
 //        ApplicationInfo applicationInfo = null;
 //        try {
@@ -96,6 +101,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         fragmentTransaction.commit();
         drawerLayout.addDrawerListener(toggle);
         navigationView.setNavigationItemSelectedListener(this);
+        FilecheckThread filecheckThread=new FilecheckThread();
+        Toast.makeText(getApplicationContext(),"检查文件中....",Toast.LENGTH_SHORT).show();
+        filecheckThread.execute();
     }
     @Override
     public void onBackPressed() {
@@ -154,6 +162,21 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         DrawerLayout drawer=(DrawerLayout)findViewById(R.id.drawerlayout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+    class FilecheckThread extends AsyncTask<String,String,String>{
+        @Override
+        protected String doInBackground(String... strings) {
+            Log.i("test","check file");
+            checkandcreatefile();
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            super.onPostExecute(s);
+            Toast.makeText(getApplicationContext(),"检查文件完毕",Toast.LENGTH_SHORT).show();
+            Log.i("test","check completed");
+        }
     }
 
 }

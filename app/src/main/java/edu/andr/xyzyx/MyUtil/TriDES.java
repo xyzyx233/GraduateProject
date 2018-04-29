@@ -13,8 +13,6 @@ import javax.crypto.spec.SecretKeySpec;
 public class TriDES {
     // 定义加密算法，DESede即3DES
     private static final String Algorithm = "DESede";
-    // 加密密钥
-//    private static final String  Trikey= "zhaokaiqiang1992";
 
     /**
      * 加密方法

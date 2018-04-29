@@ -3,6 +3,7 @@ package edu.andr.xyzyx.finalproject;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.app.Fragment;
 import android.os.Handler;
@@ -15,6 +16,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import edu.andr.xyzyx.MyUtil.AES;
 import edu.andr.xyzyx.MyUtil.ClockBean;
@@ -57,28 +59,6 @@ public class AES_fragment extends Fragment implements ConstantArgument{
         }
     };
 
-    private Handler mHandler = new Handler(){
-
-        @Override
-        public void handleMessage(Message msg) {
-            super.handleMessage(msg);
-            if (msg.what>0&&msg.what<6) {
-                //do something,refresh UI;
-                ClockBean clockBean = (ClockBean) msg.obj;
-                textView.append("\n");
-                textView.append("第"+msg.what+"个测试文件加密用时:");
-                textView.append(String.valueOf(clockBean.getDecrypt()));
-                textView.append("\n");
-                textView.append("第"+msg.what+"个测试文件解密用时:");
-                textView.append(String.valueOf(clockBean.getDecrypt()));
-            }
-            if(msg.what==6){
-                textView.append("\n");
-                textView.append("测试结束.");
-            }
-        }
-
-    };
 //    private OnFragmentInteractionListener mListener;
 
     public AES_fragment() {
@@ -124,7 +104,10 @@ public class AES_fragment extends Fragment implements ConstantArgument{
                 if(!check())
                     return;
                 AESThread aesThread=new AESThread();
-                aesThread.run();
+                output.setText("结果：");
+                Toast.makeText(getContext(),"正在加密解密测试,请稍等....",Toast.LENGTH_SHORT).show();
+                aesThread.execute();
+                button.setEnabled(false);
             }
         });
 
@@ -168,41 +151,51 @@ public class AES_fragment extends Fragment implements ConstantArgument{
             }
         });
     }
-    class AESThread extends Thread{
+    class AESThread extends AsyncTask<String,ClockBean,String>{
         @Override
-        public void run() {
-            super.run();
+        protected String doInBackground(String... strings) {
             AES aes=new AES();
             FilerHelper filerHelper=new FilerHelper(getContext());
             for (int i=0;i<TEST_FILE_NUM;i++) {
                 try {
                     String test=filerHelper.readAssetsFile(TESTFILE[i]);
-                    ClockBean clockBean=new ClockBean();
                     long startTime= System.currentTimeMillis();
                     byte[] rawkey = aes.getRawKey(editText.getText().toString().getBytes());
                     byte[] en = aes.encrypt(rawkey, test.getBytes());
                     long endTime = System.currentTimeMillis();
                     String result = new String(aes.decrypt(rawkey, en));
                     long finishTime = System.currentTimeMillis();
-//                    Log.i("test", result);
-                    clockBean.setEncrypt(endTime-startTime);
-                    clockBean.setDecrypt(finishTime-endTime);
-                    if(mHandler!=null){
-                        Message message = mHandler.obtainMessage();
-                        message.what=i;
-                        message.obj=clockBean;
-                        mHandler.sendMessage(message);
-                    }
+                    ClockBean clockBean=new ClockBean(startTime,endTime,finishTime);
+                    clockBean.setTime(i);
+                    publishProgress(clockBean);
+                    Log.i("test","2_"+(i+1));
+                    Log.i("test",String.valueOf(clockBean.getEncrypt()));
+                    Log.i("test",String.valueOf(clockBean.getDecrypt()));
+                    Log.i("test","2_"+(i+1));
                     filerHelper.writeDateFile(AESOUT[i],result.getBytes());
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
-            if(mHandler!=null){
-                Message message = mHandler.obtainMessage();
-                message.what=6;
-                mHandler.sendMessage(message);
-            }
+            return null;
+        }
+        @Override
+        protected void onProgressUpdate(ClockBean... values) {
+            super.onProgressUpdate(values);
+            output.append("\n");
+            output.append("第"+values[0].getTime()+"个测试文件加密用时:");
+            output.append(String.valueOf(values[0].getEncrypt()));
+            output.append("ms\n");
+            output.append("第"+values[0].getTime()+"个测试文件解密用时:");
+            output.append(String.valueOf(values[0].getDecrypt())+"ms");
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            super.onPostExecute(s);
+            output.append("\n");
+            output.append("测试结束.");
+            button.setEnabled(true);
         }
     }
 //    // TODO: Rename method, update argument and hook method into UI event

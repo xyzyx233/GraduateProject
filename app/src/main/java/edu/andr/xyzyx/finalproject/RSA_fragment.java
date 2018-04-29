@@ -1,8 +1,8 @@
 package edu.andr.xyzyx.finalproject;
 
-import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.app.Fragment;
 import android.os.Handler;
@@ -68,29 +68,6 @@ public class RSA_fragment extends Fragment implements ConstantArgument{
         }
     };
 
-    private Handler mHandler = new Handler(){
-
-        @Override
-        public void handleMessage(Message msg) {
-            super.handleMessage(msg);
-            if (msg.what>0&&msg.what<6) {
-                //do something,refresh UI;
-                ClockBean clockBean = (ClockBean) msg.obj;
-                textView.append("\n");
-                textView.append("第"+msg.what+"个测试文件加密用时:");
-                textView.append(String.valueOf(clockBean.getDecrypt()));
-                textView.append("\n");
-                textView.append("第"+msg.what+"个测试文件解密用时:");
-                textView.append(String.valueOf(clockBean.getDecrypt()));
-            }
-            if(msg.what==6){
-                textView.append("\n");
-                textView.append("测试结束.");
-            }
-        }
-
-    };
-
     public RSA_fragment() {
         // Required empty public constructor
     }
@@ -150,7 +127,10 @@ public class RSA_fragment extends Fragment implements ConstantArgument{
             @Override
             public void onClick(View v) {
                 RSAThread rsaThread=new RSAThread();
-                rsaThread.run();
+                output.setText("结果：");
+                Toast.makeText(getContext(),"正在加密解密测试,请稍等....",Toast.LENGTH_SHORT).show();
+                rsaThread.execute();
+                button.setEnabled(false);
             }
         });
         return view;
@@ -189,10 +169,9 @@ public class RSA_fragment extends Fragment implements ConstantArgument{
             }
         });
     }
-class RSAThread extends Thread{
+class RSAThread extends AsyncTask<String,ClockBean,String> {
     @Override
-    public void run() {
-        super.run();
+    protected String doInBackground(String... strings) {
         PublicKey publicKey = null;
         PrivateKey privateKey=null;
         InputStream inPublic=null;
@@ -231,7 +210,12 @@ class RSAThread extends Thread{
                 e.printStackTrace();
             }
             // 加密
-            byte[] encryptByte = rsa.encryptData(source.getBytes(), publicKey);
+            byte[] encryptByte = new byte[0];
+            try {
+                encryptByte = rsa.encryptByPublicKeyForSpilt(source.getBytes(), publicKey);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
             // 为了方便观察吧加密后的数据用base64加密转一下，要不然看起来是乱码,所以解密是也是要用Base64先转换
             String afterencrypt = new String(Base64.encode(encryptByte, Base64.DEFAULT));
             long endTime = System.currentTimeMillis();
@@ -240,16 +224,21 @@ class RSAThread extends Thread{
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            byte[] decryptByte = rsa.decryptData(Base64.decode(afterencrypt, Base64.DEFAULT), privateKey);
+            byte[] decryptByte = new byte[0];
+            try {
+                decryptByte = rsa.decryptByPrivateKeyForSpilt(Base64.decode(afterencrypt, Base64.DEFAULT), privateKey);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
             long finishTime = System.currentTimeMillis();
             String decryptStr = new String(decryptByte);
             ClockBean clockBean=new ClockBean(startTime,endTime,finishTime);
-            if(mHandler!=null){
-                Message message = mHandler.obtainMessage();
-                message.what=i;
-                message.obj=clockBean;
-                mHandler.sendMessage(message);
-            }
+            clockBean.setTime(i);
+            publishProgress(clockBean);
+            Log.i("test","4_"+(i+1));
+            Log.i("test",String.valueOf(clockBean.getEncrypt()));
+            Log.i("test",String.valueOf(clockBean.getDecrypt()));
+            Log.i("test","4_"+(i+1));
             try {
                 filerHelper.writeDateFile(RSAOUT[i],decryptStr.getBytes());
             } catch (IOException e) {
@@ -257,11 +246,25 @@ class RSAThread extends Thread{
             }
 //            Log.i("test", decryptStr);
         }
-        if(mHandler!=null){
-            Message message = mHandler.obtainMessage();
-            message.what=6;
-            mHandler.sendMessage(message);
-        }
+        return null;
+    }
+    @Override
+    protected void onProgressUpdate(ClockBean... values) {
+        super.onProgressUpdate(values);
+        output.append("\n");
+        output.append("第"+values[0].getTime()+"个测试文件加密用时:");
+        output.append(String.valueOf(values[0].getEncrypt()));
+        output.append("ms\n");
+        output.append("第"+values[0].getTime()+"个测试文件解密用时:");
+        output.append(String.valueOf(values[0].getDecrypt())+"ms");
+    }
+
+    @Override
+    protected void onPostExecute(String s) {
+        super.onPostExecute(s);
+        output.append("\n");
+        output.append("测试结束.");
+        button.setEnabled(true);
     }
 }
 //    // TODO: Rename method, update argument and hook method into UI event

@@ -2,6 +2,7 @@ package edu.andr.xyzyx.MyUtil;
 
 import android.content.Context;
 import android.icu.util.Output;
+import android.util.Log;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -41,8 +42,6 @@ public class FilerHelper {
             String result = streamRead(fis);
             return result;
         } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
             e.printStackTrace();
         }
         return "";
@@ -84,7 +83,10 @@ public class FilerHelper {
         // 取得输入流
         InputStream is = null;
             is = context.getResources().getAssets().open(filename);
+            if(is==null)
+                Log.i("test","instream is empty");
         String result = streamRead(is);// 返回一个字符串
+//        Log.i("test",result);
         return result;
 
     }

@@ -2,6 +2,7 @@ package edu.andr.xyzyx.finalproject;
 
 import android.content.Intent;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.app.Fragment;
 import android.os.Handler;
@@ -14,16 +15,19 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.spongycastle.crypto.CryptoException;
 
 import java.io.IOException;
+import java.io.InputStream;
 
 import edu.andr.xyzyx.MyUtil.ClockBean;
 import edu.andr.xyzyx.MyUtil.ConstantArgument;
 import edu.andr.xyzyx.MyUtil.DES;
 import edu.andr.xyzyx.MyUtil.FilerHelper;
 import edu.andr.xyzyx.MyUtil.RandomString;
+import edu.andr.xyzyx.MyUtil.nDES;
 
 
 /**
@@ -63,28 +67,7 @@ public class DES_fragment extends Fragment implements ConstantArgument{
         }
     };
 
-    private Handler mHandler = new Handler(){
 
-        @Override
-        public void handleMessage(Message msg) {
-            super.handleMessage(msg);
-            if (msg.what>0&&msg.what<6) {
-                //do something,refresh UI;
-                ClockBean clockBean = (ClockBean) msg.obj;
-                textView.append("\n");
-                textView.append("第"+msg.what+"个测试文件加密用时:");
-                textView.append(String.valueOf(clockBean.getDecrypt()));
-                textView.append("\n");
-                textView.append("第"+msg.what+"个测试文件解密用时:");
-                textView.append(String.valueOf(clockBean.getDecrypt()));
-            }
-            if(msg.what==6){
-                textView.append("\n");
-                textView.append("测试结束.");
-            }
-        }
-
-    };
 //    private OnFragmentInteractionListener mListener;
 
     public DES_fragment() {
@@ -131,7 +114,10 @@ public class DES_fragment extends Fragment implements ConstantArgument{
                 if(!check())
                     return;
                 DESThread desThread=new DESThread();
-                desThread.run();
+                output.setText("结果：");
+                Toast.makeText(getContext(),"正在加密解密测试,请稍等....",Toast.LENGTH_SHORT).show();
+                desThread.execute();
+                button.setEnabled(false);
             }
         });
         return view;
@@ -154,6 +140,13 @@ public class DES_fragment extends Fragment implements ConstantArgument{
     }
 
     private void initview(){
+//        try {
+//            InputStream in=getResources().getAssets().open("test1.txt");
+//            Log.i("test","read");
+//        } catch (IOException e) {
+//            Log.i("test","not read");
+//            e.printStackTrace();
+//        }
         textView=(TextView)view.findViewById(R.id.about_des);
         button=(Button)view.findViewById(R.id.btn_des);
         editText=(EditText)view.findViewById(R.id.des_key);
@@ -188,11 +181,11 @@ public class DES_fragment extends Fragment implements ConstantArgument{
         });
 
     }
-class DESThread extends Thread{
+class DESThread extends AsyncTask<String,ClockBean,String> {
+        public DESThread(){}
     @Override
-    public void run() {
-        super.run();
-        DES des=new DES(deskey);
+    protected String doInBackground(String... strings) {
+        nDES des=new nDES(deskey);
         String result;
         String test;
         FilerHelper filehelper=new FilerHelper(getContext());
@@ -205,13 +198,12 @@ class DESThread extends Thread{
                 result = des.decryptString(b);
                 long finishTime = System.currentTimeMillis();
                 ClockBean clockBean=new ClockBean(startTime,endTime,finishTime);
-                if(mHandler!=null){
-                    Message message = mHandler.obtainMessage();
-                    message.what=i;
-                    message.obj=clockBean;
-                    mHandler.sendMessage(message);
-                }
-                Log.i("test", result);
+                clockBean.setTime(i);
+                publishProgress(clockBean);
+                Log.i("test","1_"+(i+1));
+                Log.i("test",String.valueOf(clockBean.getEncrypt()));
+                Log.i("test",String.valueOf(clockBean.getDecrypt()));
+                Log.i("test","1_"+(i+1));
                 filehelper.writeDateFile(DESOUT[i], result.getBytes());
             } catch (CryptoException e) {
                 e.printStackTrace();
@@ -219,11 +211,25 @@ class DESThread extends Thread{
                 Log.i("text", "no test data file import");
             }
         }
-        if(mHandler!=null){
-            Message message = mHandler.obtainMessage();
-            message.what=6;
-            mHandler.sendMessage(message);
-        }
+        return null;
+    }
+    @Override
+    protected void onProgressUpdate(ClockBean... values) {
+        super.onProgressUpdate(values);
+        output.append("\n");
+        output.append("第"+values[0].getTime()+"个测试文件加密用时:");
+        output.append(String.valueOf(values[0].getEncrypt()));
+        output.append("ms\n");
+        output.append("第"+values[0].getTime()+"个测试文件解密用时:");
+        output.append(String.valueOf(values[0].getDecrypt())+"ms");
+    }
+
+    @Override
+    protected void onPostExecute(String s) {
+        super.onPostExecute(s);
+        output.append("\n");
+        output.append("测试结束.");
+        button.setEnabled(true);
     }
 }
     // TODO: Rename method, update argument and hook method into UI event

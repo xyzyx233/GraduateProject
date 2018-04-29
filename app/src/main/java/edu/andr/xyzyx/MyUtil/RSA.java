@@ -19,6 +19,8 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.RSAPublicKeySpec;
 import java.security.spec.X509EncodedKeySpec;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.crypto.Cipher;
 
@@ -28,87 +30,109 @@ import javax.crypto.Cipher;
 
 public class RSA {
     private static String RSA = "RSA";
+    public static final int DEFAULT_KEY_SIZE = 1024;
+    /**加密的数据最大的字节数，即117个字节*/
+    public static final int DEFAULT_BUFFERSIZE = (DEFAULT_KEY_SIZE / 8) - 11;
+    /**当加密的数据超过DEFAULT_BUFFERSIZE，则使用分段加密*/
+    public static final byte[] DEFAULT_SPLIT = "#PART#".getBytes();
+    public static final String TRANSFORMATION = "RSA/None/PKCS1Padding";
 
-    /**
-     * 随机生成RSA密钥对(默认密钥长度为1024)
-     *
-     * @return
-     */
-    public  KeyPair generateRSAKeyPair()
-    {
-        return generateRSAKeyPair(1024);
+    public  byte[] encryptByPublicKey(byte[] data, PublicKey pubKey) throws Exception {
+                // 加密数据
+        Cipher cp = Cipher.getInstance(TRANSFORMATION);
+        cp.init(Cipher.ENCRYPT_MODE, pubKey);
+        return cp.doFinal(data);
     }
 
-    /**
-     * 随机生成RSA密钥对
-     *
-     * @param keyLength
-     *            密钥长度，范围：512～2048<br>
-     *            一般1024
-     * @return
-     */
-    public  KeyPair generateRSAKeyPair(int keyLength)
-    {
-        try
-        {
-            KeyPairGenerator kpg = KeyPairGenerator.getInstance(RSA);
-            kpg.initialize(keyLength);
-            return kpg.genKeyPair();
-        } catch (NoSuchAlgorithmException e)
-        {
-            e.printStackTrace();
-            return null;
-        }
+    /** 使用私钥解密 */
+    public  byte[] decryptByPrivateKey(byte[] encrypted, PrivateKey keyPrivate) throws Exception {
+        // 解密数据
+        Cipher cp = Cipher.getInstance(TRANSFORMATION);
+        cp.init(Cipher.DECRYPT_MODE, keyPrivate);
+        byte[] arr = cp.doFinal(encrypted);
+        return arr;
     }
 
-    /**
-     * 用公钥加密 <br>
-     * 每次加密的字节数，不能超过密钥的长度值减去11
-     *
-     * @param data
-     *            需加密数据的byte数据
-     * @param publicKey
-     *            公钥
-     * @return 加密后的byte型数据
-     */
-    public  byte[] encryptData(byte[] data, PublicKey publicKey)
-    {
-        try
-        {
-            Cipher cipher = Cipher.getInstance(RSA);
-            // 编码前设定编码方式及密钥
-            cipher.init(Cipher.ENCRYPT_MODE, publicKey);
-            // 传入编码数据并返回编码结果
-            return cipher.doFinal(data);
-        } catch (Exception e)
-        {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-    /**
-     * 用私钥解密
-     *
-     * @param encryptedData
-     *            经过encryptedData()加密返回的byte数据
-     * @param privateKey
-     *            私钥
-     * @return
-     */
-    public  byte[] decryptData(byte[] encryptedData, PrivateKey privateKey)
-    {
-        try
-        {
-            Cipher cipher = Cipher.getInstance(RSA);
-            cipher.init(Cipher.DECRYPT_MODE, privateKey);
-            return cipher.doFinal(encryptedData);
-        } catch (Exception e)
-        {
-            return null;
-        }
-    }
-
+//    /**
+//     * 随机生成RSA密钥对(默认密钥长度为1024)
+//     *
+//     * @return
+//     */
+//    public KeyPair generateRSAKeyPair()
+//    {
+//        return generateRSAKeyPair(1024);
+//    }
+//
+//    /**
+//     * 随机生成RSA密钥对
+//     *
+//     * @param keyLength
+//     *            密钥长度，范围：512～2048<br>
+//     *            一般1024
+//     * @return
+//     */
+//    public  KeyPair generateRSAKeyPair(int keyLength)
+//    {
+//        try
+//        {
+//            KeyPairGenerator kpg = KeyPairGenerator.getInstance(RSA);
+//            kpg.initialize(keyLength);
+//            return kpg.genKeyPair();
+//        } catch (NoSuchAlgorithmException e)
+//        {
+//            e.printStackTrace();
+//            return null;
+//        }
+//    }
+//
+//    /**
+//     * 用公钥加密 <br>
+//     * 每次加密的字节数，不能超过密钥的长度值减去11
+//     *
+//     * @param data
+//     *            需加密数据的byte数据
+//     * @param publicKey
+//     *            公钥
+//     * @return 加密后的byte型数据
+//     */
+//    public  byte[] encryptData(byte[] data, PublicKey publicKey)
+//    {
+//        try
+//        {
+//            Cipher cipher = Cipher.getInstance(RSA);
+//            // 编码前设定编码方式及密钥
+//            cipher.init(Cipher.ENCRYPT_MODE, publicKey);
+//            // 传入编码数据并返回编码结果
+//            return cipher.doFinal(data);
+//        } catch (Exception e)
+//        {
+//            e.printStackTrace();
+//            return null;
+//        }
+//    }
+//
+//    /**
+//     * 用私钥解密
+//     *
+//     * @param encryptedData
+//     *            经过encryptedData()加密返回的byte数据
+//     * @param privateKey
+//     *            私钥
+//     * @return
+//     */
+//    public  byte[] decryptData(byte[] encryptedData, PrivateKey privateKey)
+//    {
+//        try
+//        {
+//            Cipher cipher = Cipher.getInstance(RSA);
+//            cipher.init(Cipher.DECRYPT_MODE, privateKey);
+//            return cipher.doFinal(encryptedData);
+//        } catch (Exception e)
+//        {
+//            return null;
+//        }
+//    }
+//
     /**
      * 通过公钥byte[](publicKey.getEncoded())将公钥还原，适用于RSA算法
      *
@@ -334,5 +358,106 @@ public class RSA {
         System.out.println("PrivateExponent.length=" + rsaPrivateKey.getPrivateExponent().bitLength());
         System.out.println("PrivatecExponent=" + rsaPrivateKey.getPrivateExponent().toString());
 
+    }
+
+    /** 使用公钥分段加密 */
+    public byte[] encryptByPublicKeyForSpilt(byte[] data,PublicKey publicKey) throws Exception{
+        int dataLen = data.length;
+        if (dataLen <= DEFAULT_BUFFERSIZE) {
+            return encryptByPublicKey(data, publicKey);
+        }
+        List<Byte> allBytes = new ArrayList<Byte>(2048);
+        int bufIndex = 0;
+        int subDataLoop = 0;
+        byte[] buf = new byte[DEFAULT_BUFFERSIZE];
+        for (int i = 0; i < dataLen; i++) {
+            buf[bufIndex] = data[i];
+            if (++bufIndex == DEFAULT_BUFFERSIZE || i == dataLen - 1) {
+                subDataLoop++;
+                if (subDataLoop != 1) {
+                    for (byte b : DEFAULT_SPLIT) {
+                        allBytes.add(b);
+                    }
+                }
+                byte[] encryptBytes = encryptByPublicKey(buf, publicKey);
+                for (byte b : encryptBytes) {
+                    allBytes.add(b);
+                }
+                bufIndex = 0;
+                if (i == dataLen - 1) {
+                    buf = null;
+                } else {
+                    buf = new byte[Math
+                            .min(DEFAULT_BUFFERSIZE, dataLen - i - 1)];
+                }
+            }
+        }
+        byte[] bytes = new byte[allBytes.size()];
+        int i = 0;
+        for (Byte b : allBytes) {
+            bytes[i++] = b.byteValue();
+        }
+        return bytes;
+    }
+
+    /** 使用私钥分段解密 */
+    public byte[] decryptByPrivateKeyForSpilt(byte[] encrypted, PrivateKey privateKey) throws Exception {
+        int splitLen = DEFAULT_SPLIT.length;
+        if (splitLen <= 0) {
+            return decryptByPrivateKey(encrypted, privateKey);
+        }
+        int dataLen = encrypted.length;
+        List<Byte> allBytes = new ArrayList<Byte>(1024);
+        int latestStartIndex = 0;
+        for (int i = 0; i < dataLen; i++) {
+            byte bt = encrypted[i];
+            boolean isMatchSplit = false;
+            if (i == dataLen - 1) {
+                // 到data的最后了
+                byte[] part = new byte[dataLen - latestStartIndex];
+                System.arraycopy(encrypted, latestStartIndex, part, 0, part.length);
+                byte[] decryptPart = decryptByPrivateKey(part, privateKey);
+                for (byte b : decryptPart) {
+                    allBytes.add(b);
+                }
+                latestStartIndex = i + splitLen;
+                i = latestStartIndex - 1;
+            } else if (bt == DEFAULT_SPLIT[0]) {
+                // 这个是以split[0]开头
+                if (splitLen > 1) {
+                    if (i + splitLen < dataLen) {
+                        // 没有超出data的范围
+                        for (int j = 1; j < splitLen; j++) {
+                            if (DEFAULT_SPLIT[j] != encrypted[i + j]) {
+                                break;
+                            }
+                            if (j == splitLen - 1) {
+                                // 验证到split的最后一位，都没有break，则表明已经确认是split段
+                                isMatchSplit = true;
+                            }
+                        }
+                    }
+                } else {
+                    // split只有一位，则已经匹配了
+                    isMatchSplit = true;
+                }
+            }
+            if (isMatchSplit) {
+                byte[] part = new byte[i - latestStartIndex];
+                System.arraycopy(encrypted, latestStartIndex, part, 0, part.length);
+                byte[] decryptPart = decryptByPrivateKey(part, privateKey);
+                for (byte b : decryptPart) {
+                    allBytes.add(b);
+                }
+                latestStartIndex = i + splitLen;
+                i = latestStartIndex - 1;
+            }
+        }
+        byte[] bytes = new byte[allBytes.size()];
+        int i = 0;
+        for (Byte b : allBytes) {
+            bytes[i++] = b.byteValue();
+        }
+        return bytes;
     }
 }

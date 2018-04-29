@@ -3,6 +3,7 @@ package edu.andr.xyzyx.finalproject;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.app.Fragment;
 import android.os.Handler;
@@ -15,6 +16,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -24,6 +26,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.security.NoSuchAlgorithmException;
 
 import edu.andr.xyzyx.MyUtil.ChaCha;
 import edu.andr.xyzyx.MyUtil.ClockBean;
@@ -51,7 +54,7 @@ public class ChaCha_fragment extends Fragment implements ConstantArgument{
     private String mParam2;
     private byte[] key,iv;
     private View view;
-    private TextView textView;
+    private TextView textView,output;
     private Button button;
     private EditText chachakey;
 
@@ -72,19 +75,21 @@ public class ChaCha_fragment extends Fragment implements ConstantArgument{
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
-            if (msg.what>0&&msg.what<6) {
+            if (msg.what>=0&&msg.what<TEST_FILE_NUM) {
                 //do something,refresh UI;
+                int x=msg.what+1;
                 ClockBean clockBean = (ClockBean) msg.obj;
-                textView.append("\n");
-                textView.append("第"+msg.what+"个测试文件加密用时:");
-                textView.append(String.valueOf(clockBean.getDecrypt()));
-                textView.append("\n");
-                textView.append("第"+msg.what+"个测试文件解密用时:");
-                textView.append(String.valueOf(clockBean.getDecrypt()));
+                output.append("\n");
+                output.append("第"+x+"个测试文件加密用时:");
+                output.append(String.valueOf(clockBean.getDecrypt()));
+                output.append("ms\n");
+                output.append("第"+x+"个测试文件解密用时:");
+                output.append(String.valueOf(clockBean.getDecrypt())+"ms");
             }
             if(msg.what==6){
-                textView.append("\n");
-                textView.append("测试结束.");
+                output.append("\n");
+                output.append("测试结束.");
+                button.setEnabled(true);
             }
         }
 
@@ -161,13 +166,19 @@ public class ChaCha_fragment extends Fragment implements ConstantArgument{
                             .show();
                     return;
                 }
-                Log.i("test",GetChachaKeyandIV.sha(chachakey.getText().toString()));
-                key=GetChachaKeyandIV.sha(chachakey.getText().toString()).substring(0, 31).getBytes();
-                iv=GetChachaKeyandIV.sha(chachakey.getText().toString()).substring(31, 39).getBytes();
-                Log.i("test",new String(key));
-                Log.i("test",new String(iv));
+//                Log.i("teSt",GetChachaKeyandIV.sha(chachakey.getText().toString()));
+//                Log.i("teSt",String.valueOf(GetChachaKeyandIV.sha(chachakey.getText().toString()).length()));
+                key=GetChachaKeyandIV.sha(chachakey.getText().toString()).substring(0, 32).getBytes();
+                iv=GetChachaKeyandIV.sha(chachakey.getText().toString()).substring(32, 40).getBytes();
+//                Log.i("teSt",new String(key));
+//                Log.i("teSt",String.valueOf(key.length));
+//                Log.i("teSt",new String(iv));
+//                Log.i("teSt",String.valueOf(iv.length));
                 ChachaThread chachaThread=new ChachaThread();
-//                chachaThread.run();
+                output.setText("结果：");
+                Toast.makeText(getContext(),"正在加密解密测试,请稍等....",Toast.LENGTH_SHORT).show();
+                chachaThread.execute();
+                button.setEnabled(false);
             }
         });
         return view;
@@ -183,6 +194,7 @@ public class ChaCha_fragment extends Fragment implements ConstantArgument{
         textView=(TextView)view.findViewById(R.id.about_chacha);
         button=(Button)view.findViewById(R.id.btn_chacha);
         chachakey=(EditText)view.findViewById(R.id.chacha_key);
+        output=(TextView)view.findViewById(R.id.chachatest);
         textView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -202,19 +214,30 @@ public class ChaCha_fragment extends Fragment implements ConstantArgument{
                 .show();
 
     }
-    class ChachaThread extends Thread{
+    class ChachaThread extends AsyncTask<String,ClockBean,String>{
         @Override
-        public void run() {
-            super.run();
-            String in,out;
+        protected String doInBackground(String... strings) {
+            String in="",out;
             ByteArrayOutputStream m=null;
             InputStream fis=null,isDec=null;
             OutputStream fos=null;
             ByteArrayOutputStream osEnc= new ByteArrayOutputStream();
             ChaCha chaCha=new ChaCha();
+//            FilerHelper filerHelper=new FilerHelper(getContext());
+//            try {
+//                chaCha.chachaString(filerHelper.readAssetsFile(TESTFILE[0]).getBytes(),key,iv);
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            } catch (NoSuchAlgorithmException e) {
+//                e.printStackTrace();
+//            }
             FilerHelper filerHelper=new FilerHelper(getContext());
             for (int i=0;i<TEST_FILE_NUM;i++) {
-                in = filerHelper.readSDCardFile(TESTFILE[i]);
+                try {
+                    in = filerHelper.readAssetsFile(TESTFILE[i]);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
                 long startTime= System.currentTimeMillis();
                 fis = new ByteArrayInputStream(in.getBytes());
                 ByteArrayOutputStream osDec = new ByteArrayOutputStream();
@@ -230,20 +253,38 @@ public class ChaCha_fragment extends Fragment implements ConstantArgument{
                     e.printStackTrace();
                 }
                 ClockBean clockBean=new ClockBean(startTime,endTime,finishTime);
-                if(mHandler!=null){
-                    Message message = mHandler.obtainMessage();
-                    message.what=i;
-                    message.obj=clockBean;
-                    mHandler.sendMessage(message);
-                }
+                clockBean.setTime(i);
+                publishProgress(clockBean);
+                Log.i("test","3_"+(i+1));
+                Log.i("test",String.valueOf(clockBean.getEncrypt()));
+                Log.i("test",String.valueOf(clockBean.getDecrypt()));
+                Log.i("test","3_"+(i+1));
 //            Log.i("test",new String(osDec.toByteArray()));
-                filerHelper.writeSDCardFile(CHAOUT[i], osDec.toByteArray());
+                try {
+                    filerHelper.writeDateFile(CHAOUT[i], osDec.toByteArray());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
-            if(mHandler!=null){
-                Message message = mHandler.obtainMessage();
-                message.what=6;
-                mHandler.sendMessage(message);
-            }
+            return null;
+        }
+        @Override
+        protected void onProgressUpdate(ClockBean... values) {
+            super.onProgressUpdate(values);
+            output.append("\n");
+            output.append("第"+values[0].getTime()+"个测试文件加密用时:");
+            output.append(String.valueOf(values[0].getEncrypt()));
+            output.append("ms\n");
+            output.append("第"+values[0].getTime()+"个测试文件解密用时:");
+            output.append(String.valueOf(values[0].getDecrypt())+"ms");
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            super.onPostExecute(s);
+            output.append("\n");
+            output.append("测试结束.");
+            button.setEnabled(true);
         }
     }
 
