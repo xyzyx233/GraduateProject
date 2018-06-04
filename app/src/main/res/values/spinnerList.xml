@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="algorithms">
+        <item>DES</item>
+        <item>3DES </item>
+        <item>AES</item>
+        <item>ChaCha20</item>
+        <item>Base64</item>
+    </string-array>
+</resources>

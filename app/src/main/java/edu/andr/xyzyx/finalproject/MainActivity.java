@@ -149,8 +149,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             fragment=new RSA_fragment();
             fragmentTransaction.replace(R.id.fg_container,fragment);
         } else if (id == R.id.nav_share) {
-            Toast.makeText(getApplicationContext(), "share",
-                    Toast.LENGTH_SHORT).show();
+            fragment=new FileCrypt_Fragment();
+            fragmentTransaction.replace(R.id.fg_container,fragment);
+//            Toast.makeText(getApplicationContext(), "share",
+//                    Toast.LENGTH_SHORT).show();
         } else if (id == R.id.nav_about) {
             Toast.makeText(getApplicationContext(), "about",
                     Toast.LENGTH_SHORT).show();

@@ -1,5 +1,8 @@
 package edu.andr.xyzyx.MyUtil;
 
+import android.content.Context;
+
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -26,7 +29,7 @@ public class AESFile {
     /**
      * 生成AES对称秘钥
      */
-    public String generateKey(String seed) throws NoSuchAlgorithmException, NoSuchProviderException {
+    private String generateKey(String seed) throws NoSuchAlgorithmException, NoSuchProviderException {
         KeyGenerator keygen = KeyGenerator.getInstance("AES");
         SecureRandom sr = SecureRandom.getInstance("SHA1PRNG", "Crypto");
         sr.setSeed(seed.getBytes());
@@ -38,35 +41,35 @@ public class AESFile {
     /**
      * 加密
      */
-    public void encrypt(InputStream in) throws InvalidKeyException, ShortBufferException, IllegalBlockSizeException, BadPaddingException, NoSuchAlgorithmException, NoSuchPaddingException, IOException {
+    private void encrypt(InputStream in) throws InvalidKeyException, ShortBufferException, IllegalBlockSizeException, BadPaddingException, NoSuchAlgorithmException, NoSuchPaddingException, IOException {
         this.crypt(in, null, Cipher.ENCRYPT_MODE);
     }
 
     /**
      * 解密
      */
-    public String decrypt(InputStream in) throws InvalidKeyException, ShortBufferException, IllegalBlockSizeException, BadPaddingException, NoSuchAlgorithmException, NoSuchPaddingException, IOException {
+    private String decrypt(InputStream in) throws InvalidKeyException, ShortBufferException, IllegalBlockSizeException, BadPaddingException, NoSuchAlgorithmException, NoSuchPaddingException, IOException {
         return this.crypt(in, Cipher.DECRYPT_MODE);
     }
 
     /**
      * 加密
      */
-    public void encrypt(InputStream in, OutputStream out) throws InvalidKeyException, ShortBufferException, IllegalBlockSizeException, BadPaddingException, NoSuchAlgorithmException, NoSuchPaddingException, IOException {
+    private void encrypt(InputStream in, OutputStream out) throws InvalidKeyException, ShortBufferException, IllegalBlockSizeException, BadPaddingException, NoSuchAlgorithmException, NoSuchPaddingException, IOException {
         this.crypt(in, out, Cipher.ENCRYPT_MODE);
     }
 
     /**
      * 解密
      */
-    public void decrypt(InputStream in, OutputStream out) throws InvalidKeyException, ShortBufferException, IllegalBlockSizeException, BadPaddingException, NoSuchAlgorithmException, NoSuchPaddingException, IOException {
+    private void decrypt(InputStream in, OutputStream out) throws InvalidKeyException, ShortBufferException, IllegalBlockSizeException, BadPaddingException, NoSuchAlgorithmException, NoSuchPaddingException, IOException {
         this.crypt(in, out, Cipher.DECRYPT_MODE);
     }
 
     /**
      * 实际的加密解密过程
      */
-    public void crypt(InputStream in, OutputStream out, int mode) throws IOException, ShortBufferException, IllegalBlockSizeException, BadPaddingException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException {
+    private void crypt(InputStream in, OutputStream out, int mode) throws IOException, ShortBufferException, IllegalBlockSizeException, BadPaddingException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException {
         Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
         cipher.init(mode, this.key);
 
@@ -99,7 +102,7 @@ public class AESFile {
     /**
      * 实际的加密解密过程
      */
-    public String crypt(InputStream in, int mode) throws IOException, ShortBufferException, IllegalBlockSizeException, BadPaddingException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException {
+    private String crypt(InputStream in, int mode) throws IOException, ShortBufferException, IllegalBlockSizeException, BadPaddingException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException {
         Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
         cipher.init(mode, this.key);
 
@@ -134,5 +137,15 @@ public class AESFile {
 
     public Key getKey() {
         return key;
+    }
+    public void en(String in, String out, String seed, Context context) throws NoSuchProviderException, NoSuchAlgorithmException, IOException, BadPaddingException, IllegalBlockSizeException, ShortBufferException, NoSuchPaddingException, InvalidKeyException {
+        generateKey(seed);
+        FilerHelper filerHelper=new FilerHelper(context);
+        encrypt(filerHelper.getFileInputStream(in),filerHelper.getFileOutputStream(out));
+    }
+    public void de(String in,String out,String seed, Context context) throws NoSuchProviderException, NoSuchAlgorithmException, IOException, BadPaddingException, IllegalBlockSizeException, ShortBufferException, NoSuchPaddingException, InvalidKeyException {
+        generateKey(seed);
+        FilerHelper filerHelper=new FilerHelper(context);
+        decrypt(filerHelper.getFileInputStream(in),filerHelper.getFileOutputStream(out));
     }
 }

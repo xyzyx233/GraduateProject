@@ -5,8 +5,10 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.app.Fragment;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
+import android.provider.DocumentsContract;
 import android.support.design.widget.Snackbar;
 import android.util.Base64;
 import android.util.Log;
@@ -139,12 +141,31 @@ public class RSA_fragment extends Fragment implements ConstantArgument{
         if (resultCode == getActivity().RESULT_OK) {
             if (requestCode == 1) {
                 Uri uri = data.getData();
-                Log.i("test",uri.toString());
+                if (isExternalStorageDocument(uri)) {
+                    String docId = DocumentsContract.getDocumentId(uri);
+                    String[] split = docId.split(":");
+                    String type = split[0];
+                    if ("primary".equalsIgnoreCase(type)) {
+                        prikeypath=Environment.getExternalStorageDirectory() + "/" + split[1];
+                    }
+                }
+                Log.i("test",prikeypath);
             }if (requestCode == 2) {
                 Uri uri = data.getData();
-                Log.i("test",uri.toString());
+                if (isExternalStorageDocument(uri)) {
+                    String docId = DocumentsContract.getDocumentId(uri);
+                    String[] split = docId.split(":");
+                    String type = split[0];
+                    if ("primary".equalsIgnoreCase(type)) {
+                        pubkeypath=Environment.getExternalStorageDirectory() + "/" + split[1];
+                    }
+                }
+                Log.i("test",pubkeypath);
             }
         }
+    }
+    public static boolean isExternalStorageDocument(Uri uri) {
+        return "com.android.externalstorage.documents".equals(uri.getAuthority());
     }
     private void initview() {
         textView=(TextView)view.findViewById(R.id.about_rsa);

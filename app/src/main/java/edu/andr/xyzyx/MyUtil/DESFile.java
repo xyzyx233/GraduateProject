@@ -64,7 +64,7 @@ public class DESFile {
      * @param in
      * @param savePath 加密后保存的位置
      */
-    public void doEncryptFile(InputStream in, String savePath)
+    private void doEncryptFile(InputStream in, String savePath)
     {
         if(in==null)
         {
@@ -107,7 +107,7 @@ public class DESFile {
      * 解密文件
      * @param in
      */
-    public void doDecryptFile(InputStream in)
+    private void doDecryptFile(InputStream in,String savePath)
     {
         if(in==null)
         {
@@ -118,16 +118,19 @@ public class DESFile {
             CipherInputStream cin = new CipherInputStream(in, mDecryptCipher);
             BufferedReader reader = new BufferedReader(new InputStreamReader(cin)) ;
             String line = null;
+            OutputStream os = new FileOutputStream(savePath);
+            byte[] bytes = new byte[1024];
+            os.close();
             while((line=reader.readLine())!=null)
             {
-                System.out.println(line);
+                os.write(line.getBytes(), 0, line.length());
+                os.flush();
             }
             reader.close();
             cin.close();
             in.close();
-            System.out.println("解密成功");
+            os.close();
         } catch (Exception e) {
-            System.out.println("解密失败");
             e.printStackTrace();
         }
     }
@@ -136,8 +139,8 @@ public class DESFile {
      * @param filePath  文件路径
      * @throws Exception
      */
-    public void doDecryptFile(String filePath) throws Exception
+    public void doDecryptFile(String filePath,String savePath) throws Exception
     {
-        doDecryptFile(new FileInputStream(filePath));
+        doDecryptFile(new FileInputStream(filePath),savePath);
     }
 }
