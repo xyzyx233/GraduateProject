@@ -3,6 +3,7 @@ package edu.andr.xyzyx.finalproject;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.app.Fragment;
 import android.os.Environment;
@@ -45,6 +46,8 @@ import edu.andr.xyzyx.MyUtil.ChaCha;
 import edu.andr.xyzyx.MyUtil.DESFile;
 import edu.andr.xyzyx.MyUtil.FilerHelper;
 import edu.andr.xyzyx.MyUtil.GetChachaKeyandIV;
+import edu.andr.xyzyx.MyUtil.RSAwithKey;
+import edu.andr.xyzyx.MyUtil.RandomString;
 import edu.andr.xyzyx.MyUtil.TriDES;
 import edu.andr.xyzyx.MyUtil.TriDESFile;
 import edu.andr.xyzyx.MyUtil.nDES;
@@ -67,7 +70,8 @@ public class FileCrypt_Fragment extends Fragment {
     // TODO: Rename and change types of parameters
     private String mParam1;
     private String mParam2;
-    private String filepath,fileoutpath;
+    private String filepath="",fileoutpath="",keypath="";
+    private String deskey;
     private View view;
     private String[] li={"a","b","c","d","e"};
     private int pos=0;
@@ -134,7 +138,7 @@ public class FileCrypt_Fragment extends Fragment {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-                intent.setType("*/*");//设置类型，我这里是任意类型，任意后缀的可以这样写。
+                intent.setType("mykey/mykey");//设置类型，我这里是任意类型，任意后缀的可以这样写。
                 intent.addCategory(Intent.CATEGORY_OPENABLE);
                 startActivityForResult(intent,3);
             }
@@ -153,250 +157,168 @@ public class FileCrypt_Fragment extends Fragment {
             @Override
             public void onClick(View v) {
                 String key=endekey.getText().toString();
+                if(key.length()<=0){
+                    Toast.makeText(getContext(),"密钥不能为空",Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                Log.i("test",String.valueOf(isencrypt));
+                Log.i("test",filepath);
                 if(isencrypt){
-                    switch (pos){
-                        case 0:
-                            nDES nDES=new nDES(key);
-                            try {
-                                DESFile desFile=new DESFile(key);
-                                desFile.doEncryptFile(filepath,filepath+"."+li[pos]);
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                            }
-                            break;
-                        case 1:
-                            TriDESFile triDESFile=new TriDESFile(filepath,filepath+li[pos],key,getContext());
-                            try {
-                                triDESFile.encryptfile();
-                            } catch (UnsupportedEncodingException e) {
-                                e.printStackTrace();
-                            }
-
-                            break;
-                        case 2:
-                            AESFile aesFile=new AESFile();
-                            try {
-                                aesFile.en(filepath,filepath+"."+li[pos],key,getContext());
-                            } catch (NoSuchProviderException e) {
-                                e.printStackTrace();
-                            } catch (NoSuchAlgorithmException e) {
-                                e.printStackTrace();
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            } catch (BadPaddingException e) {
-                                e.printStackTrace();
-                            } catch (IllegalBlockSizeException e) {
-                                e.printStackTrace();
-                            } catch (ShortBufferException e) {
-                                e.printStackTrace();
-                            } catch (NoSuchPaddingException e) {
-                                e.printStackTrace();
-                            } catch (InvalidKeyException e) {
-                                e.printStackTrace();
-                            }
-
-                            break;
-                        case 3:
-                            ChaCha chaCha=new ChaCha();
-                            FilerHelper filerHelper=new FilerHelper(getContext());
-                            byte[] keys= GetChachaKeyandIV.sha(key).substring(0, 32).getBytes();
-                            byte[] iv=GetChachaKeyandIV.sha(key).substring(32, 40).getBytes();
-                            try {
-                                chaCha.encChaCha(filerHelper.getFileInputStream(filepath),filerHelper.getFileOutputStream(filepath+"."+li[pos]),keys,iv);
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                            break;
-                        case 4:
-                            Base64File base64File=new Base64File();
-                            base64File.encryptfile(getContext(),filepath,filepath+"."+li[pos]);
-                            break;
-                        default:
-                            Toast.makeText(getContext(),"不懂",Toast.LENGTH_LONG);
-                            break;
+                    if(filepath.equals("")){
+                        Toast.makeText(getContext(),"文件不能为空",Toast.LENGTH_SHORT).show();
+                        return;
                     }
+                    ENThread enThread=new ENThread();
+                    enThread.execute(String.valueOf(pos),key);
                 }else {
                     String in= inen.getText().toString();
-                    switch (pos){
-                        case 0:
-                            nDES nDES=new nDES(key);
-                            try {
-                                String out=new String(Base64.encode(nDES.encryptString(in),Base64.DEFAULT));
-                                outde.setText(out);
-                            } catch (CryptoException e) {
-                                e.printStackTrace();
-                            }
-                            break;
-                        case 1:
-                            TriDES triDES=new TriDES();
-                            String out=new String(Base64.encode(triDES.encryptMode(in.getBytes(), key),Base64.DEFAULT));
-                            outde.setText(out);
-                            break;
-                        case 2:
-                            AES aes=new AES();
-                            try {
-                                byte[] rawkey = aes.getRawKey(key.getBytes());
-                                String out1 = new String(Base64.encode(aes.encrypt(rawkey, in.getBytes()),Base64.DEFAULT));
-                                outde.setText(out1);
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                            }
-                            break;
-                        case 3:
-                            ChaCha chaCha=new ChaCha();
-                            byte[] keys= GetChachaKeyandIV.sha(key).substring(0, 32).getBytes();
-                            byte[] iv=GetChachaKeyandIV.sha(key).substring(32, 40).getBytes();
-                            try (InputStream isEnc = new ByteArrayInputStream(in.getBytes());
-                                 ByteArrayOutputStream osEnc = new ByteArrayOutputStream())
-                            {
-                                chaCha.encChaCha(isEnc, osEnc, keys, iv);
-                                byte[] encoded = osEnc.toByteArray();
-                                outde.setText(new String(Base64.encode(encoded,Base64.DEFAULT)));
-
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                            break;
-                        case 4:
-                            outde.setText(new String(Base64.encode(in.getBytes(),Base64.DEFAULT)));
-                            break;
-                        default:
-                            Toast.makeText(getContext(),"不懂",Toast.LENGTH_LONG);
-                            break;
-                    }
+                    ENfun(key,in);
                 }
+
+            }
+        });
+        endekey.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+                intent.setType("*/*");//设置类型，我这里是任意类型，任意后缀的可以这样写。
+                intent.addCategory(Intent.CATEGORY_OPENABLE);
+                startActivityForResult(intent,4);
+                return true;
             }
         });
         dec.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 String key=endekey.getText().toString();
-                int dot = filepath.lastIndexOf('.');
-                if ((dot >-1) && (dot < (filepath.length()))) {
-                    fileoutpath= filepath.substring(0, dot);
-                }
-                String[] split=filepath.split(".");
-                if(!(split[split.length-1].equals("a")||
-                        split[split.length-1].equals("b")||
-                    split[split.length-1].equals("c")||
-                    split[split.length-1].equals("d")||
-                    split[split.length-1].equals("e"))){
-                    Toast.makeText(getContext(),"文件类型错误",Toast.LENGTH_LONG);
+                if(key.length()<=0){
+                    Toast.makeText(getContext(),"密钥不能为空",Toast.LENGTH_SHORT).show();
                     return;
                 }
-                String s=split[split.length-1];
+                Log.i("test",String.valueOf(isencrypt));
+                Log.i("test",filepath);
                 if(isencrypt){
-                    switch (s){
-                        case "a":
-                            nDES nDES=new nDES(key);
-                            try {
-                                DESFile desFile=new DESFile(key);
-                                desFile.doDecryptFile(filepath,fileoutpath);
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                            }
-                            break;
-                        case "b":
-                            TriDESFile triDESFile=new TriDESFile(filepath,fileoutpath,key,getContext());
-                            triDESFile.decryptfile();
-
-                            break;
-                        case "c":
-                            AESFile aesFile=new AESFile();
-                            try {
-                                aesFile.de(filepath,fileoutpath,key,getContext());
-                            } catch (NoSuchProviderException e) {
-                                e.printStackTrace();
-                            } catch (NoSuchAlgorithmException e) {
-                                e.printStackTrace();
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            } catch (BadPaddingException e) {
-                                e.printStackTrace();
-                            } catch (IllegalBlockSizeException e) {
-                                e.printStackTrace();
-                            } catch (ShortBufferException e) {
-                                e.printStackTrace();
-                            } catch (NoSuchPaddingException e) {
-                                e.printStackTrace();
-                            } catch (InvalidKeyException e) {
-                                e.printStackTrace();
-                            }
-
-                            break;
-                        case "d":
-                            ChaCha chaCha=new ChaCha();
-                            FilerHelper filerHelper=new FilerHelper(getContext());
-                            byte[] keys= GetChachaKeyandIV.sha(key).substring(0, 32).getBytes();
-                            byte[] iv=GetChachaKeyandIV.sha(key).substring(32, 40).getBytes();
-                            try {
-                                chaCha.decChaCha(filerHelper.getFileInputStream(filepath),filerHelper.getFileOutputStream(fileoutpath),keys,iv);
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                            break;
-                        case "e":
-                            Base64File base64File=new Base64File();
-                            base64File.decryptfile(getContext(),filepath,fileoutpath);
-                            break;
-                        default:
-                            Toast.makeText(getContext(),"不懂",Toast.LENGTH_LONG);
-                            break;
+                    if(filepath.equals("")){
+                        Toast.makeText(getContext(),"文件不能为空",Toast.LENGTH_SHORT).show();
+                        return;
                     }
+                    DEThread deThread=new DEThread();
+                    deThread.execute(key);
                 }else {
                     String in= inen.getText().toString();
-                    switch (pos){
-                        case 0:
-                            nDES nDES=new nDES(key);
-                            try {
-                                String out=new String(nDES.decryptString(Base64.decode(in,Base64.DEFAULT)));
-                                outde.setText(out);
-                            } catch (CryptoException e) {
-                                e.printStackTrace();
-                            }
-                            break;
-                        case 1:
-                            TriDES triDES=new TriDES();
-                            String out=new String(triDES.decryptMode(Base64.decode(in,Base64.DEFAULT), key));
-                            outde.setText(out);
-                            break;
-                        case 2:
-                            AES aes=new AES();
-                            try {
-                                byte[] rawkey = aes.getRawKey(key.getBytes());
-                                String out1 = new String(aes.decrypt(rawkey, Base64.decode(in,Base64.DEFAULT)));
-                                outde.setText(out1);
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                            }
-                            break;
-                        case 3:
-                            ChaCha chaCha=new ChaCha();
-                            byte[] keys= GetChachaKeyandIV.sha(key).substring(0, 32).getBytes();
-                            byte[] iv=GetChachaKeyandIV.sha(key).substring(32, 40).getBytes();
-                            try (InputStream isDec = new ByteArrayInputStream(Base64.decode(in,Base64.DEFAULT));
-                                 ByteArrayOutputStream osDec = new ByteArrayOutputStream())
-                            {
-                                chaCha.decChaCha(isDec, osDec, keys, iv);
-                                byte[] decoded = osDec.toByteArray();
-                                outde.setText(new String(decoded));
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                            break;
-                        case 4:
-                            outde.setText(new String(Base64.decode(in.getBytes(),Base64.DEFAULT)));
-                            break;
-                        default:
-                            Toast.makeText(getContext(),"不懂",Toast.LENGTH_LONG);
-                            break;
-                    }
-
+                    DEfun(key,in);
                 }
             }
         });
         return view;
 //        /storage/emulated/0/666/Duan/file_8858757.png
+    }
+    private void DEfun(String key,String in){
+        switch (pos){
+            case 0:
+                nDES nDES=new nDES(key);
+                try {
+                    String out=new String(nDES.decryptString(Base64.decode(in,Base64.DEFAULT)));
+                    outde.setText(out);
+                } catch (CryptoException e) {
+                    e.printStackTrace();
+                }
+                break;
+            case 1:
+                TriDES triDES=new TriDES();
+                String out=new String(triDES.decryptMode(Base64.decode(in,Base64.DEFAULT), key));
+                outde.setText(out);
+                break;
+            case 2:
+                AES aes=new AES();
+                try {
+                    byte[] rawkey = aes.getRawKey(key.getBytes());
+                    String out1 = new String(aes.decrypt(rawkey, Base64.decode(in,Base64.DEFAULT)));
+                    outde.setText(out1);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                break;
+            case 3:
+                ChaCha chaCha=new ChaCha();
+                byte[] keys= GetChachaKeyandIV.sha(key).substring(0, 32).getBytes();
+                byte[] iv=GetChachaKeyandIV.sha(key).substring(32, 40).getBytes();
+                try (InputStream isDec = new ByteArrayInputStream(Base64.decode(in,Base64.DEFAULT));
+                     ByteArrayOutputStream osDec = new ByteArrayOutputStream())
+                {
+                    chaCha.decChaCha(isDec, osDec, keys, iv);
+                    byte[] decoded = osDec.toByteArray();
+                    outde.setText(new String(decoded));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                break;
+            case 4:
+                outde.setText(new String(Base64.decode(in.getBytes(),Base64.DEFAULT)));
+                break;
+            default:
+                Toast.makeText(getContext(),"不懂",Toast.LENGTH_SHORT).show();
+                break;
+        }
+    }
+    private void ENfun(String key,String in){
+        switch (pos){
+            case 0:
+                if (key.length()!=8){
+                    Toast.makeText(getContext(),"密钥非法，DES密钥长度为56位",Toast.LENGTH_SHORT).show();
+//                    Snackbar.make(view,"密钥非法,是否随机密钥？",Snackbar.LENGTH_INDEFINITE).setAction("确定", new View.OnClickListener() {
+//                        @Override
+//                        public void onClick(View v) {
+//                            deskey= RandomString.getRandomString(8);
+//                        }
+//                    }) .show();
+                }
+//                key=deskey;
+                nDES nDES=new nDES(key);
+                try {
+                    String out=new String(Base64.encode(nDES.encryptString(in),Base64.DEFAULT));
+                    outde.setText(out);
+                } catch (CryptoException e) {
+                    e.printStackTrace();
+                }
+                break;
+            case 1:
+                TriDES triDES=new TriDES();
+                String out=new String(Base64.encode(triDES.encryptMode(in.getBytes(), key),Base64.DEFAULT));
+                outde.setText(out);
+                break;
+            case 2:
+                AES aes=new AES();
+                try {
+                    byte[] rawkey = aes.getRawKey(key.getBytes());
+                    String out1 = new String(Base64.encode(aes.encrypt(rawkey, in.getBytes()),Base64.DEFAULT));
+                    outde.setText(out1);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                break;
+            case 3:
+                ChaCha chaCha=new ChaCha();
+                byte[] keys= GetChachaKeyandIV.sha(key).substring(0, 32).getBytes();
+                byte[] iv=GetChachaKeyandIV.sha(key).substring(32, 40).getBytes();
+                try (InputStream isEnc = new ByteArrayInputStream(in.getBytes());
+                     ByteArrayOutputStream osEnc = new ByteArrayOutputStream())
+                {
+                    chaCha.encChaCha(isEnc, osEnc, keys, iv);
+                    byte[] encoded = osEnc.toByteArray();
+                    outde.setText(new String(Base64.encode(encoded,Base64.DEFAULT)));
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                break;
+            case 4:
+                outde.setText(new String(Base64.encode(in.getBytes(),Base64.DEFAULT)));
+                break;
+            default:
+                Toast.makeText(getContext(),"不懂",Toast.LENGTH_SHORT).show();
+                break;
+        }
     }
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (resultCode == getActivity().RESULT_OK) {
@@ -410,6 +332,18 @@ public class FileCrypt_Fragment extends Fragment {
                     }
                     pathtext.setText(filepath);
                 Log.i("test",filepath);
+            }
+            if (requestCode == 4) {
+                Uri uri = data.getData();
+                String docId = DocumentsContract.getDocumentId(uri);
+                String[] split = docId.split(":");
+                String type = split[0];
+                if ("primary".equalsIgnoreCase(type)) {
+                    keypath= Environment.getExternalStorageDirectory() + "/" + split[1];
+                }
+                ReadKey readKey=new ReadKey();
+                readKey.execute(keypath);
+                Log.i("test",keypath);
             }
         }
     }
@@ -429,8 +363,219 @@ public class FileCrypt_Fragment extends Fragment {
                     public void onClick(View v) {
 
                     }
-                })
-                .show();
+                }).show();
+    }
+    class ReadKey extends AsyncTask<String,String,String>{
+        @Override
+        protected String doInBackground(String... strings) {
+            String[] split= strings[0].split(".");
+            if(!split[split.length-1].equals("mykey")){
+                publishProgress("0");
+                return "";
+            }
+            RSAwithKey rsAwithKey=new RSAwithKey();
+            String keyy=rsAwithKey.decryptkey("pri",strings[0],getContext(),"source");
+            publishProgress("1",keyy);
+            return null;
+        }
+
+        @Override
+        protected void onProgressUpdate(String... values) {
+            super.onProgressUpdate(values);
+            switch (values[0]){
+                case "0":
+                    Toast.makeText(getContext(),"文件类型错误",Toast.LENGTH_SHORT).show();
+
+                    Snackbar.make(getActivity().findViewById(android.R.id.content), "文件类型错误", Snackbar.LENGTH_SHORT).show();
+                    break;
+                case "1":
+                    endekey.setText(values[0]);
+                    break;
+            }
+
+        }
+    }
+    class ENThread extends AsyncTask<String,String,String>{
+        private int pos;
+        private String key;
+        @Override
+        protected String doInBackground(String... strings) {
+            pos=Integer.parseInt(strings[0]);
+            key=strings[1];
+            switch (pos){
+                case 0:
+                    if (key.length()!=8){
+                        String skey= RandomString.getRandomString(8);
+                        publishProgress("");
+                    }
+                    nDES nDES=new nDES(key);
+                    try {
+                        DESFile desFile=new DESFile(key);
+                        desFile.doEncryptFile(filepath,filepath+"."+li[pos]);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    break;
+                case 1:
+                    TriDESFile triDESFile=new TriDESFile(filepath,filepath+li[pos],key,getContext());
+                    try {
+                        triDESFile.encryptfile();
+                    } catch (UnsupportedEncodingException e) {
+                        e.printStackTrace();
+                    }
+
+                    break;
+                case 2:
+                    AESFile aesFile=new AESFile();
+                    try {
+                        aesFile.en(filepath,filepath+"."+li[pos],key,getContext());
+                    } catch (NoSuchProviderException e) {
+                        e.printStackTrace();
+                    } catch (NoSuchAlgorithmException e) {
+                        e.printStackTrace();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    } catch (BadPaddingException e) {
+                        e.printStackTrace();
+                    } catch (IllegalBlockSizeException e) {
+                        e.printStackTrace();
+                    } catch (ShortBufferException e) {
+                        e.printStackTrace();
+                    } catch (NoSuchPaddingException e) {
+                        e.printStackTrace();
+                    } catch (InvalidKeyException e) {
+                        e.printStackTrace();
+                    }
+
+                    break;
+                case 3:
+                    ChaCha chaCha=new ChaCha();
+                    FilerHelper filerHelper=new FilerHelper(getContext());
+                    byte[] keys= GetChachaKeyandIV.sha(key).substring(0, 32).getBytes();
+                    byte[] iv=GetChachaKeyandIV.sha(key).substring(32, 40).getBytes();
+                    try {
+                        chaCha.encChaCha(filerHelper.getFileInputStream(filepath),filerHelper.getFileOutputStream(filepath+"."+li[pos]),keys,iv);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    break;
+                case 4:
+                    Base64File base64File=new Base64File();
+                    base64File.encryptfile(getContext(),filepath,filepath+"."+li[pos]);
+                    break;
+                default:
+                    publishProgress("1");
+                    break;
+            }
+            return null;
+        }
+        @Override
+        protected void onProgressUpdate(String... values) {
+            super.onProgressUpdate(values);
+            if(values[0].equals("")) {
+                endekey.setText(key);
+            }
+            if(values[0].equals("1")){
+                Toast.makeText(getContext(),"不懂",Toast.LENGTH_SHORT).show();
+            }
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            super.onPostExecute(s);
+            RSAwithKey rsAwithKey=new RSAwithKey();
+            rsAwithKey.encryptkey("pub",filepath+"."+"mykey",getContext(),key);
+        }
+    }
+    class DEThread extends AsyncTask<String,String,String>{
+        private String key;
+        @Override
+        protected String doInBackground(String... strings) {
+            key=strings[1];
+            int dot = filepath.lastIndexOf('.');
+            if ((dot >-1) && (dot < (filepath.length()))) {
+                fileoutpath= filepath.substring(0, dot);
+            }
+            String[] split=filepath.split(".");
+            if(!(split[split.length-1].equals("a")||
+                    split[split.length-1].equals("b")||
+                    split[split.length-1].equals("c")||
+                    split[split.length-1].equals("d")||
+                    split[split.length-1].equals("e"))){
+                publishProgress("");
+                return "";
+            }
+            String s=split[split.length-1];
+            switch (s){
+                case "a":
+                    nDES nDES=new nDES(key);
+                    try {
+                        DESFile desFile=new DESFile(key);
+                        desFile.doDecryptFile(filepath,fileoutpath);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    break;
+                case "b":
+                    TriDESFile triDESFile=new TriDESFile(filepath,fileoutpath,key,getContext());
+                    triDESFile.decryptfile();
+
+                    break;
+                case "c":
+                    AESFile aesFile=new AESFile();
+                    try {
+                        aesFile.de(filepath,fileoutpath,key,getContext());
+                    } catch (NoSuchProviderException e) {
+                        e.printStackTrace();
+                    } catch (NoSuchAlgorithmException e) {
+                        e.printStackTrace();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    } catch (BadPaddingException e) {
+                        e.printStackTrace();
+                    } catch (IllegalBlockSizeException e) {
+                        e.printStackTrace();
+                    } catch (ShortBufferException e) {
+                        e.printStackTrace();
+                    } catch (NoSuchPaddingException e) {
+                        e.printStackTrace();
+                    } catch (InvalidKeyException e) {
+                        e.printStackTrace();
+                    }
+
+                    break;
+                case "d":
+                    ChaCha chaCha=new ChaCha();
+                    FilerHelper filerHelper=new FilerHelper(getContext());
+                    byte[] keys= GetChachaKeyandIV.sha(key).substring(0, 32).getBytes();
+                    byte[] iv=GetChachaKeyandIV.sha(key).substring(32, 40).getBytes();
+                    try {
+                        chaCha.decChaCha(filerHelper.getFileInputStream(filepath),filerHelper.getFileOutputStream(fileoutpath),keys,iv);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    break;
+                case "e":
+                    Base64File base64File=new Base64File();
+                    base64File.decryptfile(getContext(),filepath,fileoutpath);
+                    break;
+                default:
+                    publishProgress("1");
+                    break;
+            }
+            return null;
+        }
+
+        @Override
+        protected void onProgressUpdate(String... values) {
+            super.onProgressUpdate(values);
+            if(values[0].equals("")) {
+                Toast.makeText(getContext(), "文件类型错误", Toast.LENGTH_SHORT).show();
+            }
+            if(values[0].equals("1")){
+                Toast.makeText(getContext(),"不懂",Toast.LENGTH_SHORT).show();
+            }
+        }
     }
 
 // // TODO: Rename method, update argument and hook method into UI event

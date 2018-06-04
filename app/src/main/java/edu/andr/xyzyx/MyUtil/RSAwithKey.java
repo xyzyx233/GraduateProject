@@ -14,10 +14,10 @@ import java.security.PublicKey;
 
 public class RSAwithKey implements ConstantArgument{
 
-    PublicKey publicKey = null;
-    PrivateKey privateKey = null;
-    InputStream inPublic = null;
-    InputStream inPrivate = null;
+    private PublicKey publicKey = null;
+    private PrivateKey privateKey = null;
+    private InputStream inPublic = null;
+    private InputStream inPrivate = null;
 
     public void encryptkey(String pubkeypath, String filepath, Context context,String source) {
         RSA rsa = new RSA();
@@ -43,7 +43,7 @@ public class RSAwithKey implements ConstantArgument{
         String afterencrypt = new String(Base64.encode(encryptByte, Base64.DEFAULT));
         filerHelper.writeSDCardFile(filepath,afterencrypt.getBytes());
     }
-    public byte[] decryptkey(String prikeypath, String filepath, Context context,String source){
+    public String decryptkey(String prikeypath, String filepath, Context context,String source){
         RSA rsa = new RSA();
         FilerHelper filerHelper = new FilerHelper(context);
         byte[] rawkey = Base64.decode(filerHelper.readSDCardFile(filepath), Base64.DEFAULT);
@@ -63,6 +63,6 @@ public class RSAwithKey implements ConstantArgument{
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return decryptByte;
+        return new String(decryptByte);
     }
 }
