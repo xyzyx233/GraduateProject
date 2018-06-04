@@ -122,7 +122,7 @@ public class FileCrypt_Fragment extends Fragment {
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 String[] algorithms = getResources().getStringArray(R.array.algorithms);
                 pos=position;
-                Toast.makeText(getContext(), "你点击的是:"+algorithms[pos], Toast.LENGTH_LONG).show();
+//                Toast.makeText(getContext(), "你点击的是:"+algorithms[pos], Toast.LENGTH_LONG).show();
             }
 
             @Override
@@ -271,26 +271,40 @@ public class FileCrypt_Fragment extends Fragment {
             @Override
             public void onClick(View v) {
                 String key=endekey.getText().toString();
+                int dot = filepath.lastIndexOf('.');
+                if ((dot >-1) && (dot < (filepath.length()))) {
+                    fileoutpath= filepath.substring(0, dot);
+                }
+                String[] split=filepath.split(".");
+                if(!(split[split.length-1].equals("a")||
+                        split[split.length-1].equals("b")||
+                    split[split.length-1].equals("c")||
+                    split[split.length-1].equals("d")||
+                    split[split.length-1].equals("e"))){
+                    Toast.makeText(getContext(),"文件类型错误",Toast.LENGTH_LONG);
+                    return;
+                }
+                String s=split[split.length-1];
                 if(isencrypt){
-                    switch (pos){
-                        case 0:
+                    switch (s){
+                        case "a":
                             nDES nDES=new nDES(key);
                             try {
                                 DESFile desFile=new DESFile(key);
-                                desFile.doDecryptFile(filepath,filepath+"."+li[pos]);
+                                desFile.doDecryptFile(filepath,fileoutpath);
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }
                             break;
-                        case 1:
-                            TriDESFile triDESFile=new TriDESFile(filepath,filepath+li[pos],key,getContext());
+                        case "b":
+                            TriDESFile triDESFile=new TriDESFile(filepath,fileoutpath,key,getContext());
                             triDESFile.decryptfile();
 
                             break;
-                        case 2:
+                        case "c":
                             AESFile aesFile=new AESFile();
                             try {
-                                aesFile.de(filepath,filepath+"."+li[pos],key,getContext());
+                                aesFile.de(filepath,fileoutpath,key,getContext());
                             } catch (NoSuchProviderException e) {
                                 e.printStackTrace();
                             } catch (NoSuchAlgorithmException e) {
@@ -310,20 +324,20 @@ public class FileCrypt_Fragment extends Fragment {
                             }
 
                             break;
-                        case 3:
+                        case "d":
                             ChaCha chaCha=new ChaCha();
                             FilerHelper filerHelper=new FilerHelper(getContext());
                             byte[] keys= GetChachaKeyandIV.sha(key).substring(0, 32).getBytes();
                             byte[] iv=GetChachaKeyandIV.sha(key).substring(32, 40).getBytes();
                             try {
-                                chaCha.decChaCha(filerHelper.getFileInputStream(filepath),filerHelper.getFileOutputStream(filepath+"."+li[pos]),keys,iv);
+                                chaCha.decChaCha(filerHelper.getFileInputStream(filepath),filerHelper.getFileOutputStream(fileoutpath),keys,iv);
                             } catch (IOException e) {
                                 e.printStackTrace();
                             }
                             break;
-                        case 4:
+                        case "e":
                             Base64File base64File=new Base64File();
-                            base64File.decryptfile(getContext(),filepath,filepath+"."+li[pos]);
+                            base64File.decryptfile(getContext(),filepath,fileoutpath);
                             break;
                         default:
                             Toast.makeText(getContext(),"不懂",Toast.LENGTH_LONG);
