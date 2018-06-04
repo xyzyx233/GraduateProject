@@ -4,6 +4,7 @@ import android.content.Context;
 import android.icu.util.Output;
 import android.util.Log;
 
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -146,5 +147,34 @@ public class FilerHelper {
 
         return result;
 
+    }
+    public byte[] readfilewithbytes(String path){
+        File file = new File(path);
+        FileInputStream fis = null;
+        FileOutputStream fos = null;
+        byte[] a=null;
+        try {
+            a = new byte[(int) file.length()];
+            fis = new FileInputStream(file);
+            BufferedInputStream bis = new BufferedInputStream(fis);
+            bis.read(a);
+            fis.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return a;
+    }
+    public void writeilewithbytes(String path,byte[] a){
+        File file = new File(path);
+        FileInputStream fis = null;
+        FileOutputStream fos = null;
+        try {
+            fos = new FileOutputStream(file);
+            fos.write(a);
+            fis.close();
+            fos.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

@@ -6,7 +6,8 @@ package edu.andr.xyzyx.MyUtil;
 
 public interface ConstantArgument {
     int TEST_FILE_NUM = 7;
-
+    String PUBKEY="rsa_public_key.pem";
+    String PRIKEY="pkcs8_rsa_private_key.pem";
     String[] TESTFILE={"test1.txt","test2.txt","test3.txt","test4.txt","test5.txt","5mb.txt","10mb.txt","100mb.txt"};
 
     String[] DESOUT={"desout1.txt","desout2.txt","desout3.txt","desout4.txt","desout5.txt","desout6.txt","desout7.txt","desout8.txt"};

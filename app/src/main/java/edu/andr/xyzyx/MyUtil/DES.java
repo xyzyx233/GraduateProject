@@ -50,19 +50,14 @@ public class DES {
     }
     // 做加密解密的具体工作
 
-    private byte[] callCipher( byte[] data )
-            throws CryptoException {
-        int    size =
-                cipher.getOutputSize( data.length );
+    private byte[] callCipher( byte[] data ) throws CryptoException {
+        int size =cipher.getOutputSize( data.length );
         byte[] result = new byte[ size ];
-        int    olen = cipher.processBytes( data, 0,
-                data.length, result, 0 );
+        int olen = cipher.processBytes( data, 0,data.length, result, 0 );
         olen += cipher.doFinal( result, olen );
-
         if( olen < size ){
             byte[] tmp = new byte[ olen ];
-            System.arraycopy(
-                    result, 0, tmp, 0, olen );
+            System.arraycopy(result, 0, tmp, 0, olen );
             result = tmp;
         }
 
@@ -71,12 +66,10 @@ public class DES {
 
     // 加密任意的字节数组，以字节数组的方式返回被加密的数据
 
-    public synchronized byte[] encrypt( byte[] data )
-            throws CryptoException {
+    public synchronized byte[] encrypt( byte[] data ) throws CryptoException {
         if( data == null || data.length == 0 ){
             return new byte[0];
         }
-
         cipher.init( true, key );
         return callCipher( data );
     }
