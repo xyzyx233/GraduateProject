@@ -33,6 +33,11 @@ public class FilerHelper {
         FileOutputStream fos=new FileOutputStream(file);
         return fos;
     }
+    public InputStream getFileInputStreamR(String path) throws IOException {
+        InputStream is = null;
+        is = context.getResources().getAssets().open(path);
+        return is;
+    }
     public String readSDCardFile(String path) {
 
         File file = new File(path);

@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
@@ -97,9 +98,11 @@ public class DESFile {
      * @param savePath 加密后保存的位置
      * @throws FileNotFoundException
      */
-    public void doEncryptFile(String filePath,String savePath) throws FileNotFoundException
+    public void doEncryptFile(String filePath,String savePath) throws IOException
     {
-        doEncryptFile(new FileInputStream(filePath), savePath);
+        InputStream is=new FileInputStream(filePath);
+        doEncryptFile(is, savePath);
+        is.close();
     }
 
 
@@ -116,17 +119,21 @@ public class DESFile {
         }
         try {
             CipherInputStream cin = new CipherInputStream(in, mDecryptCipher);
-            BufferedReader reader = new BufferedReader(new InputStreamReader(cin)) ;
-            String line = null;
+//            BufferedReader reader = new BufferedReader(new InputStreamReader(cin)) ;
+//            String line = null;
             OutputStream os = new FileOutputStream(savePath);
+            int bytesRead=0;
             byte[] bytes = new byte[1024];
-            os.close();
-            while((line=reader.readLine())!=null)
-            {
-                os.write(line.getBytes(), 0, line.length());
-                os.flush();
+            while ((bytesRead = cin.read(bytes, 0, 1024)) != -1) {
+                os.write(bytes, 0, bytesRead);
             }
-            reader.close();
+            os.close();
+//            while((line=reader.readLine())!=null)
+//            {
+//                os.write(line.getBytes(), 0, line.length());
+//                os.flush();
+//            }
+//            reader.close();
             cin.close();
             in.close();
             os.close();
@@ -141,6 +148,8 @@ public class DESFile {
      */
     public void doDecryptFile(String filePath,String savePath) throws Exception
     {
-        doDecryptFile(new FileInputStream(filePath),savePath);
+        InputStream is=new FileInputStream(filePath);
+        doDecryptFile(is,savePath);
+//        is.close();
     }
 }

@@ -27,6 +27,9 @@ import org.spongycastle.crypto.CryptoException;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
@@ -138,7 +141,7 @@ public class FileCrypt_Fragment extends Fragment {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-                intent.setType("mykey/mykey");//设置类型，我这里是任意类型，任意后缀的可以这样写。
+                intent.setType("*/*");//设置类型，我这里是任意类型，任意后缀的可以这样写。
                 intent.addCategory(Intent.CATEGORY_OPENABLE);
                 startActivityForResult(intent,3);
             }
@@ -161,8 +164,8 @@ public class FileCrypt_Fragment extends Fragment {
                     Toast.makeText(getContext(),"密钥不能为空",Toast.LENGTH_SHORT).show();
                     return;
                 }
-                Log.i("test",String.valueOf(isencrypt));
-                Log.i("test",filepath);
+                Log.i("testx",String.valueOf(isencrypt));
+                Log.i("testx",filepath);
                 if(isencrypt){
                     if(filepath.equals("")){
                         Toast.makeText(getContext(),"文件不能为空",Toast.LENGTH_SHORT).show();
@@ -170,6 +173,8 @@ public class FileCrypt_Fragment extends Fragment {
                     }
                     ENThread enThread=new ENThread();
                     enThread.execute(String.valueOf(pos),key);
+                    Toast.makeText(getContext(),"加密开始",Toast.LENGTH_SHORT).show();
+                    Log.i("testx","encrypt start");
                 }else {
                     String in= inen.getText().toString();
                     ENfun(key,in);
@@ -195,8 +200,8 @@ public class FileCrypt_Fragment extends Fragment {
                     Toast.makeText(getContext(),"密钥不能为空",Toast.LENGTH_SHORT).show();
                     return;
                 }
-                Log.i("test",String.valueOf(isencrypt));
-                Log.i("test",filepath);
+//                Log.i("testx",String.valueOf(isencrypt));
+                Log.i("testx",filepath);
                 if(isencrypt){
                     if(filepath.equals("")){
                         Toast.makeText(getContext(),"文件不能为空",Toast.LENGTH_SHORT).show();
@@ -331,7 +336,7 @@ public class FileCrypt_Fragment extends Fragment {
                         filepath= Environment.getExternalStorageDirectory() + "/" + split[1];
                     }
                     pathtext.setText(filepath);
-                Log.i("test",filepath);
+                Log.i("testx",filepath);
             }
             if (requestCode == 4) {
                 Uri uri = data.getData();
@@ -343,7 +348,6 @@ public class FileCrypt_Fragment extends Fragment {
                 }
                 ReadKey readKey=new ReadKey();
                 readKey.execute(keypath);
-                Log.i("test",keypath);
             }
         }
     }
@@ -368,8 +372,11 @@ public class FileCrypt_Fragment extends Fragment {
     class ReadKey extends AsyncTask<String,String,String>{
         @Override
         protected String doInBackground(String... strings) {
-            String[] split= strings[0].split(".");
+//            Log.i("testx","read key path: "+strings[0]);
+            String[] split= strings[0].split("\\.");
+//            Log.i("testx","read key path: "+split[split.length-1]);
             if(!split[split.length-1].equals("mykey")){
+                Log.i("testx","read key: "+strings[0]);
                 publishProgress("0");
                 return "";
             }
@@ -385,11 +392,10 @@ public class FileCrypt_Fragment extends Fragment {
             switch (values[0]){
                 case "0":
                     Toast.makeText(getContext(),"文件类型错误",Toast.LENGTH_SHORT).show();
-
-                    Snackbar.make(getActivity().findViewById(android.R.id.content), "文件类型错误", Snackbar.LENGTH_SHORT).show();
+//                    Snackbar.make(getActivity().findViewById(android.R.id.content), "文件类型错误", Snackbar.LENGTH_SHORT).show();
                     break;
                 case "1":
-                    endekey.setText(values[0]);
+                    endekey.setText(values[1]);
                     break;
             }
 
@@ -408,42 +414,51 @@ public class FileCrypt_Fragment extends Fragment {
                         String skey= RandomString.getRandomString(8);
                         publishProgress("");
                     }
-                    nDES nDES=new nDES(key);
                     try {
                         DESFile desFile=new DESFile(key);
                         desFile.doEncryptFile(filepath,filepath+"."+li[pos]);
+                        Log.i("testx","DES files");
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
                     break;
                 case 1:
-                    TriDESFile triDESFile=new TriDESFile(filepath,filepath+li[pos],key,getContext());
+                    TriDESFile triDESFile=new TriDESFile(filepath,filepath+"."+li[pos],key,getContext());
                     try {
                         triDESFile.encryptfile();
+                        Log.i("testx","3DES files");
                     } catch (UnsupportedEncodingException e) {
                         e.printStackTrace();
                     }
 
                     break;
                 case 2:
-                    AESFile aesFile=new AESFile();
+                    AES aesFile=new AES();
                     try {
-                        aesFile.en(filepath,filepath+"."+li[pos],key,getContext());
-                    } catch (NoSuchProviderException e) {
-                        e.printStackTrace();
-                    } catch (NoSuchAlgorithmException e) {
-                        e.printStackTrace();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    } catch (BadPaddingException e) {
-                        e.printStackTrace();
-                    } catch (IllegalBlockSizeException e) {
-                        e.printStackTrace();
-                    } catch (ShortBufferException e) {
-                        e.printStackTrace();
-                    } catch (NoSuchPaddingException e) {
-                        e.printStackTrace();
-                    } catch (InvalidKeyException e) {
+                        FilerHelper filerHelper=new FilerHelper(getContext());
+                        ByteArrayOutputStream bytestream = new ByteArrayOutputStream();
+                        byte[] buffer=new byte[1024];
+                        File file=new File(filepath);
+                        FileInputStream is=new FileInputStream(file);
+                        int ch;
+                        while ((ch = is.read(buffer)) != -1) {
+                            bytestream.write(buffer,0,ch);
+                        }
+                        is.close();
+                        byte data[] = bytestream.toByteArray();
+                        bytestream.close();
+                        byte[] rawkey = aesFile.getRawKey(key.getBytes());
+                        byte[] m=aesFile.encrypt(rawkey,data);
+                        FileOutputStream fos = null;
+                        try {
+                            fos = new FileOutputStream(filepath+"."+li[pos]);
+                            fos.write(m);
+                            fos.close();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                        Log.i("testx","AES files");
+                    } catch (Exception e) {
                         e.printStackTrace();
                     }
 
@@ -455,6 +470,7 @@ public class FileCrypt_Fragment extends Fragment {
                     byte[] iv=GetChachaKeyandIV.sha(key).substring(32, 40).getBytes();
                     try {
                         chaCha.encChaCha(filerHelper.getFileInputStream(filepath),filerHelper.getFileOutputStream(filepath+"."+li[pos]),keys,iv);
+                        Log.i("testx","chacha files");
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -462,11 +478,15 @@ public class FileCrypt_Fragment extends Fragment {
                 case 4:
                     Base64File base64File=new Base64File();
                     base64File.encryptfile(getContext(),filepath,filepath+"."+li[pos]);
+                    Log.i("testx","base64 files");
                     break;
                 default:
                     publishProgress("1");
                     break;
             }
+            RSAwithKey rsAwithKey=new RSAwithKey();
+            Log.i("testx","key: "+ key);
+            rsAwithKey.encryptkey("pub",filepath+"."+"mykey",getContext(),key);
             return null;
         }
         @Override
@@ -483,20 +503,18 @@ public class FileCrypt_Fragment extends Fragment {
         @Override
         protected void onPostExecute(String s) {
             super.onPostExecute(s);
-            RSAwithKey rsAwithKey=new RSAwithKey();
-            rsAwithKey.encryptkey("pub",filepath+"."+"mykey",getContext(),key);
         }
     }
     class DEThread extends AsyncTask<String,String,String>{
         private String key;
         @Override
         protected String doInBackground(String... strings) {
-            key=strings[1];
+            key=strings[0];
             int dot = filepath.lastIndexOf('.');
             if ((dot >-1) && (dot < (filepath.length()))) {
                 fileoutpath= filepath.substring(0, dot);
             }
-            String[] split=filepath.split(".");
+            String[] split=filepath.split("\\.");
             if(!(split[split.length-1].equals("a")||
                     split[split.length-1].equals("b")||
                     split[split.length-1].equals("c")||
@@ -506,12 +524,13 @@ public class FileCrypt_Fragment extends Fragment {
                 return "";
             }
             String s=split[split.length-1];
+            Log.i("testx","alg: "+s);
             switch (s){
                 case "a":
-                    nDES nDES=new nDES(key);
                     try {
                         DESFile desFile=new DESFile(key);
                         desFile.doDecryptFile(filepath,fileoutpath);
+                        Log.i("testx","DES d files");
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -519,27 +538,36 @@ public class FileCrypt_Fragment extends Fragment {
                 case "b":
                     TriDESFile triDESFile=new TriDESFile(filepath,fileoutpath,key,getContext());
                     triDESFile.decryptfile();
-
+                    Log.i("testx","3DES d files");
                     break;
                 case "c":
-                    AESFile aesFile=new AESFile();
+                    AES aesFile=new AES();
                     try {
-                        aesFile.de(filepath,fileoutpath,key,getContext());
-                    } catch (NoSuchProviderException e) {
-                        e.printStackTrace();
-                    } catch (NoSuchAlgorithmException e) {
-                        e.printStackTrace();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    } catch (BadPaddingException e) {
-                        e.printStackTrace();
-                    } catch (IllegalBlockSizeException e) {
-                        e.printStackTrace();
-                    } catch (ShortBufferException e) {
-                        e.printStackTrace();
-                    } catch (NoSuchPaddingException e) {
-                        e.printStackTrace();
-                    } catch (InvalidKeyException e) {
+                        FilerHelper filerHelper=new FilerHelper(getContext());
+                        ByteArrayOutputStream bytestream = new ByteArrayOutputStream();
+                        byte[] buffer=new byte[1024];
+                        File file=new File(filepath);
+                        FileInputStream is=new FileInputStream(file);
+                        int ch;
+                        while ((ch = is.read(buffer)) != -1) {
+                            bytestream.write(buffer,0,ch);
+                        }
+                        is.close();
+                        byte data[] = bytestream.toByteArray();
+                        bytestream.close();
+                        byte[] rawkey = aesFile.getRawKey(key.getBytes());
+                        byte[] m=aesFile.decrypt(rawkey,data);
+                        FileOutputStream fos = null;
+                        try {
+                            fos = new FileOutputStream(fileoutpath);
+                            fos.write(m);
+                            fos.close();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        };
+//                        aesFile.de(filepath,fileoutpath,key,getContext());
+                        Log.i("testx","AES d files");
+                    } catch (Exception e) {
                         e.printStackTrace();
                     }
 
@@ -551,6 +579,7 @@ public class FileCrypt_Fragment extends Fragment {
                     byte[] iv=GetChachaKeyandIV.sha(key).substring(32, 40).getBytes();
                     try {
                         chaCha.decChaCha(filerHelper.getFileInputStream(filepath),filerHelper.getFileOutputStream(fileoutpath),keys,iv);
+                        Log.i("testx","chacha d files");
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -558,6 +587,7 @@ public class FileCrypt_Fragment extends Fragment {
                 case "e":
                     Base64File base64File=new Base64File();
                     base64File.decryptfile(getContext(),filepath,fileoutpath);
+                    Log.i("testx","base64 d files");
                     break;
                 default:
                     publishProgress("1");

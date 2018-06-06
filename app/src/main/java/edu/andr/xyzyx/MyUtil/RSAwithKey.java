@@ -2,8 +2,10 @@ package edu.andr.xyzyx.MyUtil;
 
 import android.content.Context;
 import android.util.Base64;
+import android.util.Log;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.security.PrivateKey;
 import java.security.PublicKey;
@@ -23,8 +25,10 @@ public class RSAwithKey implements ConstantArgument{
         RSA rsa = new RSA();
         FilerHelper filerHelper = new FilerHelper(context);
         try {
-            inPublic = filerHelper.getFileInputStream(PUBKEY);
+            inPublic = filerHelper.getFileInputStreamR(PUBKEY);
         } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
             e.printStackTrace();
         }
         try {
@@ -41,6 +45,7 @@ public class RSAwithKey implements ConstantArgument{
         }
         // 为了方便观察吧加密后的数据用base64加密转一下，要不然看起来是乱码,所以解密是也是要用Base64先转换
         String afterencrypt = new String(Base64.encode(encryptByte, Base64.DEFAULT));
+//        Log.i("testx",afterencrypt);
         filerHelper.writeSDCardFile(filepath,afterencrypt.getBytes());
     }
     public String decryptkey(String prikeypath, String filepath, Context context,String source){
@@ -48,8 +53,10 @@ public class RSAwithKey implements ConstantArgument{
         FilerHelper filerHelper = new FilerHelper(context);
         byte[] rawkey = Base64.decode(filerHelper.readSDCardFile(filepath), Base64.DEFAULT);
         try {
-            inPrivate = filerHelper.getFileInputStream(PRIKEY);
+            inPrivate = filerHelper.getFileInputStreamR(PRIKEY);
         } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
             e.printStackTrace();
         }
         try {
